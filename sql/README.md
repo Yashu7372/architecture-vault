@@ -27,6 +27,15 @@ parsed and executed) and *how* to replace it with set-based SQL (joins,
 3. [Optimization Techniques](./03-optimization-techniques.md)
 4. [Real Scenario: Bag Counts for 50 Flights](./04-conditional-aggregation-case-study.md)
 
+### Advanced Patterns (staff/principal-depth deep dives)
+
+- [advanced-patterns/](./advanced-patterns/) — hot-row contention, deep
+  pagination, fan-out joins, batch key lookups, replica lag, plan
+  instability, partitioning, locking, idempotency, and more. Each doc
+  covers problem evolution, production architecture, partitioning/sharding,
+  batch vs streaming, hot-key handling, observability, failure scenarios,
+  enterprise mapping, and Java/Spring Boot implementation.
+
 ---
 
 ## Must-Learn Concepts
