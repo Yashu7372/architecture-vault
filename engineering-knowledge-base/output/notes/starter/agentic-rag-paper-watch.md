@@ -22,7 +22,9 @@ Configured through `arxiv-agentic-rag` in `config/sources.manual.yaml`.
 ## Enterprise Mapping
 
 - Internal architecture document search
-- BRS report performance investigation knowledge base
-- BELT to MADAR migration knowledge graph
-- Solace/Couchbase/Oracle troubleshooting assistant
-- AI coding/research agents for engineering teams
+- Performance investigation knowledge base
+- Legacy to modern platform migration knowledge graph
+- Event-driven troubleshooting assistant
+- Cache, database, and workflow diagnostics
+- AI coding and research agents for engineering teams
+- Multi-tenant, station, asset, or flight-style operational domains
