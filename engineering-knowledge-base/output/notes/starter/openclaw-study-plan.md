@@ -6,17 +6,17 @@ https://github.com/openclaw/openclaw
 
 ## Why to study
 
-OpenClaw is useful as a reference for production-style personal/autonomous AI assistant patterns.
+OpenClaw is useful as a reference for production-style personal or autonomous AI assistant patterns.
 
 ## What to inspect
 
 - Agent runtime loop
 - Tool execution model
-- Memory/session management
+- Memory and session management
 - Permission and safety controls
 - Integrations with external services
 - Local deployment model
-- Observability/logging approach
+- Observability and logging approach
 
 ## Architecture Questions
 
@@ -28,8 +28,10 @@ OpenClaw is useful as a reference for production-style personal/autonomous AI as
 
 ## Enterprise Mapping
 
-- DNBMS workflow agents
+- Domain workflow agents
 - Internal support automation
-- Report/PTE investigation agents
-- Knowledge graph + tool execution
-- Governance-controlled MCP tools
+- Performance investigation agents
+- Knowledge graph and tool execution
+- Governance-controlled tools
+- Multi-tenant operational workflows
+- Station or region based routing patterns
