@@ -12,6 +12,7 @@ Personal architecture knowledge base for system design, company engineering case
 
 - [Cursor Pagination and Feed Load Design](02-Patterns/Cursor-Pagination-Feed-Load.md)
 - [Trending Feed Design](02-Patterns/Trending-Feed-Design.md)
+- [Event-Driven Processing Patterns](02-Patterns/Event-Driven-Processing-Patterns.md)
 
 ## How to Study Each Topic
 
