@@ -1,0 +1,60 @@
+sources:
+  - name: openclaw
+    type: github
+    url: https://github.com/openclaw/openclaw
+    tags:
+      - ai-agents
+      - autonomous-assistant
+      - production-agents
+
+  - name: karpathy-autoresearch
+    type: github
+    url: https://github.com/karpathy/autoresearch
+    tags:
+      - ai-research-agents
+      - llm-agents
+      - autonomous-research
+
+  - name: dropbox-engineering
+    type: web
+    url: https://dropbox.tech/
+    tags:
+      - distributed-systems
+      - storage
+      - infrastructure
+
+  - name: grab-engineering
+    type: web
+    url: https://engineering.grab.com/
+    tags:
+      - platform-engineering
+      - distributed-systems
+      - marketplace
+
+  - name: airbnb-engineering
+    type: web
+    url: https://medium.com/airbnb-engineering
+    tags:
+      - marketplace
+      - payments
+      - platform-engineering
+
+  - name: ai-agent-mastery-substack
+    type: substack
+    url: https://aiamastery.substack.com/s/advanced-architectures-for-vertical
+    login_required: true
+    auth_profile: substack
+    tags:
+      - vertical-ai-agents
+      - agentic-rag
+      - production-ai
+
+  - name: arxiv-agentic-rag
+    type: arxiv
+    query: agentic RAG multi-agent LLM production architecture
+    max_results: 25
+    tags:
+      - papers
+      - rag
+      - multi-agent-systems
+      - llm
