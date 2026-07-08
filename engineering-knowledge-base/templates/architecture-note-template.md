@@ -43,11 +43,12 @@
 
 ## Enterprise Application
 
-- DNBMS:
-- Solace / Kafka:
-- Couchbase / Redis:
-- Oracle / Postgres:
-- SSE / real-time dashboard:
-- AI agents / RAG:
+- Domain entities, assets, or resources:
+- Event stream / message broker:
+- Cache / state store:
+- Relational database / fallback store:
+- Multi-tenant, station, or region model:
+- Real-time dashboard / notification flow:
+- AI agents / RAG / workflow automation:
 
 ## Final Summary In My Words
