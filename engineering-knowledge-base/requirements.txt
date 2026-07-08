@@ -1,0 +1,10 @@
+PyYAML
+requests
+beautifulsoup4
+markdownify
+python-slugify
+readability-lxml
+lxml
+pypdf
+playwright
+feedparser
