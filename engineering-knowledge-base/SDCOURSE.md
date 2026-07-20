@@ -1,99 +1,148 @@
-# SDCourse Daily Learning Builder
+# SDCourse Day-by-Day Learning System
 
-This pipeline is designed for learning, not merely indexing.
+This pipeline turns the public curriculum and anonymously visible lesson material at `sdcourse.substack.com` into a personal day-by-day learning workflow.
 
-For each curriculum day it performs two separate operations:
+## Main goal
 
-1. Save every curriculum detail, article paragraph, code fragment, link, and architecture image URL that is publicly visible without subscriber access.
-2. Produce a new, detailed engineering lesson that explains the topic from first principles and connects it to the previous and next course days.
+The primary output is not merely a retrieval database. For every curriculum day, the workflow:
 
-The generated explanation is original educational material. It does not authenticate, bypass a paywall, inspect hidden subscriber state, or reconstruct subscriber-only course text.
+1. discovers the lesson in Day 1..N curriculum order;
+2. captures material available without subscriber authentication;
+3. saves the captured material separately;
+4. generates an original, standalone technical lesson that completes the topic;
+5. records progress so the next run continues from the next unfinished day.
 
-## Public access classifications
+## Access boundary
 
-- `public` — enough article content is publicly visible.
-- `preview` — only an introduction, partial article, or architecture preview is visible.
-- `curriculum-only` — only the public day title and expected output are available.
+The implementation does not log in, bypass paid access, inspect hidden subscriber state, or treat reader/crawler output as automatically public.
 
-Paywall and subscription UI elements are removed before Markdown conversion. Public images remain as source URLs when the page exposes them.
+For the Python/JavaScript curriculum, the publication explicitly advertises the first three lessons as free. The source configuration therefore allows full anonymous capture only through Day 3. Later lessons are reduced to their anonymous introductory section, public diagrams/image links, curriculum title, expected output, and article URL.
 
-## Supported tracks
+Each daily lesson is classified as:
 
-- `sdcourse-python-js` — Python and JavaScript.
-- `sdcourse-java-spring` — Java and Spring Boot.
+- `public` — verified anonymously available lesson content;
+- `preview` — only the anonymous introductory section is retained;
+- `curriculum-only` — only the public curriculum record is available.
 
-## Recommended: one lesson per scheduled run
+## Complete curriculum context
 
-Run the next unfinished Python/JavaScript lesson once:
+Every run discovers the full curriculum before applying the per-run lesson limit. It generates:
 
-```bash
-python engineering-knowledge-base/scripts/run_daily_course_learning.py
+```text
+output/courses/sdcourse-python-js/
+├── CURRICULUM_CONTEXT.md
+├── CURRICULUM_CONTEXT.json
+└── LEARNING_PATH.md
 ```
 
-Run the next Java/Spring lesson:
+The curriculum context contains public metadata only:
+
+- module;
+- week;
+- day and order;
+- lesson title;
+- expected output;
+- article URL.
+
+The parser maps the roadmap's nine module ranges and forty week entries to the 254 sequential lesson rows. Weekly groups are identified by the curriculum list ordinal resetting to `1`.
+
+## First five review pack
+
+Original review documents are committed under:
+
+```text
+learning/sdcourse-python-js/module-01/week-01/
+├── README.md
+├── day-001-development-environment.md
+├── day-002-configurable-log-generator.md
+├── day-003-local-log-collector.md
+├── day-004-log-parsing.md
+└── day-005-flat-file-storage.md
+```
+
+They form one local vertical slice:
+
+```text
+reproducible environment
+  -> controlled log generator
+  -> reliable file collector
+  -> canonical parser
+  -> append-only rotated storage
+```
+
+The committed exploration documents are original writing. Runtime article captures stay under the Git-ignored `output` directory or a private workflow artifact.
+
+## Daily generated files
+
+```text
+output/daily-learning/sdcourse-python-js/day-001/
+├── 01-public-source.md
+├── 02-completed-lesson.md
+└── STATUS.json
+```
+
+`01-public-source.md` contains the public source boundary. `02-completed-lesson.md` contains the original technical expansion. The detailed exploration documents in `learning/` are the curated review versions.
+
+## Run the next Python/JavaScript lesson
+
+```bash
+python engineering-knowledge-base/scripts/run_daily_course_learning.py \
+  --track python-js
+```
+
+Process the first or next five unfinished lessons:
+
+```bash
+python engineering-knowledge-base/scripts/run_daily_course_learning.py \
+  --track python-js \
+  --lessons-per-run 5
+```
+
+Java/Spring Boot track:
 
 ```bash
 python engineering-knowledge-base/scripts/run_daily_course_learning.py \
   --track java-spring
 ```
 
-Process three lessons per run:
+Run continuously:
 
 ```bash
 python engineering-knowledge-base/scripts/run_daily_course_learning.py \
-  --lessons-per-run 3
-```
-
-Run both tracks:
-
-```bash
-python engineering-knowledge-base/scripts/run_daily_course_learning.py \
-  --track all
-```
-
-Every invocation resumes from the existing manifest and scheduler state. A lock file prevents overlapping runs.
-
-## Built-in daemon scheduler
-
-Keep the process running and execute one lesson every 24 hours:
-
-```bash
-python engineering-knowledge-base/scripts/run_daily_course_learning.py \
+  --track python-js \
   --daemon \
   --interval-hours 24
 ```
 
-For production use, an operating-system scheduler is more reliable than a permanently running terminal.
+## Progress and resume
 
-### Linux cron example
-
-```cron
-0 6 * * * cd /path/to/architecture-vault && /path/to/python engineering-knowledge-base/scripts/run_daily_course_learning.py >> engineering-knowledge-base/output/scheduler/cron.log 2>&1
-```
-
-### Windows Task Scheduler
-
-Create a daily task whose program is the virtual-environment Python executable and whose arguments are:
+Progress is stored at:
 
 ```text
-engineering-knowledge-base\scripts\run_daily_course_learning.py --track python-js
+output/scheduler/sdcourse-state.json
 ```
 
-Set the working directory to the repository root.
+The scheduler:
 
-## Detailed lesson generation
+- prevents overlapping executions;
+- marks each day completed or failed;
+- records collection and completion modes;
+- resumes at the next unfinished day;
+- writes state atomically.
 
-Without an LLM endpoint, the pipeline uses its built-in topic profiles and creates a structured engineering lesson covering architecture, components, flow, implementation, failures, observability, security, trade-offs, tests, and study questions.
+## Optional model-backed completion
 
-For deeper lesson completion, configure any OpenAI-compatible company or local model router:
+Without a configured model, the workflow uses deterministic topic-specific engineering templates.
+
+For an approved OpenAI-compatible model endpoint:
 
 ```bash
-export COURSE_LLM_BASE_URL="https://your-company-router.example/v1"
+export COURSE_LLM_BASE_URL="https://router.example/v1"
 export COURSE_LLM_MODEL="approved-engineering-model"
-export COURSE_LLM_API_KEY="your-token"
+export COURSE_LLM_API_KEY="token"
 ```
 
-Optional controls:
+Optional settings:
 
 ```bash
 export COURSE_LLM_MAX_TOKENS="6500"
@@ -102,73 +151,33 @@ export COURSE_LLM_TEMPERATURE="0.25"
 export COURSE_LLM_STRICT="false"
 ```
 
-When the model endpoint fails and strict mode is disabled, the scheduler records the error and uses the deterministic lesson builder instead.
+## Optional retrieval context
 
-The model prompt explicitly requires original content and forbids reconstructing or imitating subscriber-only text.
-
-## Output for each day
-
-```text
-engineering-knowledge-base/output/daily-learning/
-└── sdcourse-python-js/
-    └── day-001/
-        ├── 01-public-source.md
-        ├── 02-completed-lesson.md
-        └── STATUS.json
-```
-
-`01-public-source.md` contains only publicly visible source material and curriculum metadata.
-
-`02-completed-lesson.md` contains the original detailed lesson, including:
-
-- learning objectives and terminology;
-- the course position and previous/next-day continuity;
-- requirements and invariants;
-- first-principles explanation;
-- architecture and component responsibilities;
-- end-to-end data flow;
-- contracts and data models;
-- detailed implementation steps;
-- Python/JavaScript or Java/Spring-specific notes;
-- concurrency, ordering and consistency analysis;
-- retries, idempotency, backpressure and recovery;
-- scaling and performance considerations;
-- metrics, logs and traces;
-- security and governance;
-- alternatives and trade-offs;
-- a hands-on exercise;
-- validation and load-testing guidance;
-- a Mermaid architecture diagram;
-- key takeaways and study questions.
-
-`STATUS.json` records the public access level, source character count, completion mode, model, fallback error, and generation time.
-
-Global progress is stored at:
-
-```text
-engineering-knowledge-base/output/scheduler/sdcourse-state.json
-```
-
-It records completed days, the next pending day, remaining lessons, the latest collection report, and the artifacts generated by the previous run.
-
-## Bulk ingestion
-
-The bulk command remains available when you want to process many lessons immediately:
-
-```bash
-python engineering-knowledge-base/scripts/ingest_substack_system_design_course.py \
-  --track all \
-  --resume \
-  --max-lessons 10
-```
-
-The retrieval context database is no longer the primary output. Rebuild it only when needed:
+Context rebuilding is not the primary workflow, but it remains available:
 
 ```bash
 python engineering-knowledge-base/scripts/run_daily_course_learning.py \
+  --track python-js \
   --rebuild-context
 ```
 
-## Copyright and privacy rule
+## Validation
 
-Keep copied public article fragments, generated learning files, scheduler state, and databases local or in private storage. Do not publish copied article text. Public repositories should contain the collector code, public source links, and original explanations or summaries only.
+Two workflows validate the branch:
+
+1. `Engineering Knowledge Base CI`
+   - installs dependencies;
+   - compiles Python sources;
+   - runs all unit tests.
+
+2. `SDCourse First Five Lessons`
+   - executes a real anonymous scrape;
+   - discovers exactly 254 curriculum lessons;
+   - generates Days 1–5;
+   - verifies Module 1 / Week 1 mapping;
+   - verifies access levels are exactly `public, public, public, preview, preview`;
+   - uploads a private review artifact.
+
+## Publishing rule
+
+Do not commit runtime source captures or generated article bodies. Keep them local or private. Public repository content should be limited to collector code, source links, public curriculum metadata when appropriate, and original analysis/explanations.
