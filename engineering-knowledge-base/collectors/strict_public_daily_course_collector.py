@@ -103,44 +103,71 @@ class StrictPublicDailyCourseCollector(AnonymousReaderDailyCourseCollector):
         markdown: str,
         lessons: list[CourseLesson],
     ) -> list[CourseLesson]:
-        """Merge correctly positioned headings with article URLs emitted elsewhere by the reader."""
-        module = "Uncategorized Module"
-        week = "Uncategorized Week"
+        """Map roadmap modules/weeks to the sequential weekly Day groups."""
+        module_ranges: list[tuple[int, int, str]] = []
+        week_titles: list[str] = []
+        day_section_started = False
+
+        for raw_line in markdown.splitlines():
+            plain = self._markdown_plain_text(raw_line.strip())
+            if DAY_RE.search(plain):
+                day_section_started = True
+            if day_section_started:
+                continue
+
+            if plain.lower().startswith("module "):
+                range_match = re.search(
+                    r"days?\s+(\d+)\s*[-–—]\s*(\d+)",
+                    plain,
+                    re.IGNORECASE,
+                )
+                if range_match:
+                    module_ranges.append(
+                        (int(range_match.group(1)), int(range_match.group(2)), plain)
+                    )
+            elif plain.lower().startswith("week "):
+                week_titles.append(plain)
+
         positioned: dict[int, dict] = {}
         pending_day: int | None = None
+        week_index = -1
+        seen_day = False
 
         for raw_line in markdown.splitlines():
             line = raw_line.strip()
             if not line:
                 continue
             plain = self._markdown_plain_text(line)
-            heading = plain.lstrip("# ").strip()
-            lower = heading.lower()
-            if lower.startswith("module "):
-                module = heading
-                week = "Uncategorized Week"
-                pending_day = None
-                continue
-            if lower.startswith("week "):
-                week = heading
-                pending_day = None
-                continue
 
             output_match = OUTPUT_RE.search(plain)
             if output_match and pending_day in positioned:
                 positioned[pending_day]["expected_output"] = output_match.group(1).strip()
                 continue
 
-            match = DAY_RE.search(plain)
-            if not match:
+            day_match = DAY_RE.search(plain)
+            if not day_match:
                 continue
-            day = int(match.group(1))
-            if not self._module_contains_day(module, day):
-                pending_day = None
-                continue
+            day = int(day_match.group(1))
+            ordinal_match = re.match(r"^\s*(\d+)\.\s+", raw_line)
+            local_ordinal = int(ordinal_match.group(1)) if ordinal_match else None
+            if not seen_day:
+                seen_day = True
+                week_index = 0
+            elif local_ordinal == 1:
+                week_index += 1
+
+            module = next(
+                (title for start, end, title in module_ranges if start <= day <= end),
+                "Uncategorized Module",
+            )
+            week = (
+                week_titles[week_index]
+                if 0 <= week_index < len(week_titles)
+                else "Uncategorized Week"
+            )
             pending_day = day
             positioned[day] = {
-                "title": match.group(2).strip(" :-–—"),
+                "title": day_match.group(2).strip(" :-–—"),
                 "module": module,
                 "week": week,
                 "expected_output": "",
@@ -165,14 +192,6 @@ class StrictPublicDailyCourseCollector(AnonymousReaderDailyCourseCollector):
                 )
             )
         return repaired
-
-    @staticmethod
-    def _module_contains_day(module: str, day: int) -> bool:
-        match = re.search(r"days?\s+(\d+)\s*[-–—]\s*(\d+)", module, re.IGNORECASE)
-        if not match:
-            return False
-        start, end = int(match.group(1)), int(match.group(2))
-        return start <= day <= end
 
     def _article_from_reader_markdown(
         self,
