@@ -195,25 +195,20 @@ def main():
     sources = [source for source in all_sources if not selected_names or source["name"] in selected_names]
 
     existing = load_existing_manifest()
-    if args.resume:
-        manifest_by_url = {item["url"]: item for item in existing}
-    elif selected_names:
-        manifest_by_url = {
-            item["url"]: item for item in existing if item.get("source_name") not in selected_names
-        }
-    else:
-        manifest_by_url = {}
+    existing_by_url = {item["url"]: item for item in existing}
+    manifest_by_url = dict(existing_by_url) if selected_names or args.resume else {}
 
     collected_at = datetime.now(timezone.utc).isoformat()
     for configured_source in sources:
         source = dict(configured_source)
         if args.max_articles is not None:
             source["max_articles"] = args.max_articles
-        existing_source_items = [
-            item for item in manifest_by_url.values() if item.get("source_name") == source["name"]
+
+        previous_source_items = [
+            item for item in existing_by_url.values() if item.get("source_name") == source["name"]
         ]
-        if args.resume and existing_source_items:
-            source["skip_urls"] = [item["url"] for item in existing_source_items]
+        if args.resume and previous_source_items:
+            source["skip_urls"] = [item["url"] for item in previous_source_items]
 
         print(f"Collecting: {source['name']} ({source['type']})")
         collector = get_collector(source["type"])
@@ -223,7 +218,19 @@ def main():
             print(f"Failed source {source['name']}: {exc}")
             docs = []
 
-        source_items = list(existing_source_items) if args.resume else []
+        if not args.resume and docs:
+            manifest_by_url = {
+                url: item
+                for url, item in manifest_by_url.items()
+                if item.get("source_name") != source["name"]
+            }
+            source_items: list[dict] = []
+        else:
+            source_items = list(previous_source_items)
+
+        if not docs and previous_source_items:
+            print(f"No replacement documents collected; preserving {len(previous_source_items)} existing items.")
+
         for doc in docs:
             note_path = write_note(doc)
             item = {
