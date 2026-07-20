@@ -30,16 +30,19 @@ class CatalogCollector(BaseCollector):
         self.session = session or requests.Session()
         self.session.headers.update(DEFAULT_HEADERS)
         self.web_collector = WebCollector(self.session)
+        self.last_report: dict = {}
 
     def collect(self, source: dict) -> list[KnowledgeDocument]:
-        entries = self.discover_entries(source)
+        discovered_entries = self.discover_entries(source)
         skip_urls = {self._canonical_url(url) for url in source.get("skip_urls", [])}
-        entries = [entry for entry in entries if entry.url not in skip_urls]
-        max_articles = int(source.get("max_articles", len(entries)))
+        pending_entries = [entry for entry in discovered_entries if entry.url not in skip_urls]
+        max_articles = int(source.get("max_articles", len(pending_entries)))
         min_content_chars = int(source.get("min_content_chars", 500))
-        docs: list[KnowledgeDocument] = []
+        selected_entries = pending_entries[:max_articles]
 
-        for entry in entries[:max_articles]:
+        docs: list[KnowledgeDocument] = []
+        results: list[dict] = []
+        for entry in selected_entries:
             tags = list(source.get("tags", []))
             for section, subsection in entry.locations:
                 tags.extend(self._section_tags(section, subsection))
@@ -62,19 +65,59 @@ class CatalogCollector(BaseCollector):
                 },
             }
             doc = self.web_collector.extract_url(entry.url, article_source)
-            if not doc or len(doc.content) < min_content_chars:
+            if not doc:
+                results.append(
+                    {
+                        "title": entry.title,
+                        "url": entry.url,
+                        "status": "extraction_failed",
+                        "content_chars": 0,
+                    }
+                )
+                continue
+            if len(doc.content) < min_content_chars:
+                results.append(
+                    {
+                        "title": entry.title,
+                        "url": entry.url,
+                        "status": "content_too_short",
+                        "content_chars": len(doc.content),
+                    }
+                )
                 continue
             if source.get("prefer_catalog_title"):
                 doc.title = entry.title
             doc.metadata["catalog_discovered_title"] = entry.title
             docs.append(doc)
+            results.append(
+                {
+                    "title": doc.title,
+                    "catalog_title": entry.title,
+                    "url": entry.url,
+                    "status": "collected",
+                    "content_chars": len(doc.content),
+                }
+            )
+
+        failed = sum(1 for result in results if result["status"] != "collected")
+        self.last_report = {
+            "source": source["name"],
+            "catalog_url": source.get("catalog_page", source["url"]),
+            "discovered": len(discovered_entries),
+            "skipped_existing": len(discovered_entries) - len(pending_entries),
+            "attempted": len(selected_entries),
+            "deferred_by_limit": max(0, len(pending_entries) - len(selected_entries)),
+            "collected": len(docs),
+            "failed": failed,
+            "results": results,
+        }
         return docs
 
     def discover_entries(self, source: dict) -> list[CatalogEntry]:
         response = self.session.get(source["url"], timeout=30)
         response.raise_for_status()
         markdown = response.text
-        allow_domains = {domain.lower() for domain in source.get("allow_domains", [])}
+        allow_domains = {domain.lower().strip(".") for domain in source.get("allow_domains", [])}
         include_sections = {section.lower() for section in source.get("include_sections", [])}
 
         section = "Uncategorized"
@@ -100,7 +143,7 @@ class CatalogCollector(BaseCollector):
                 title, raw_url = link.groups()
                 url = self._canonical_url(raw_url)
                 domain = urlparse(url).netloc.lower()
-                if allow_domains and domain not in allow_domains:
+                if allow_domains and not self._is_allowed_domain(domain, allow_domains):
                     continue
                 if include_sections and section.lower() not in include_sections:
                     continue
@@ -140,6 +183,10 @@ class CatalogCollector(BaseCollector):
         scheme = "https" if parsed.scheme in {"http", "https"} else parsed.scheme
         path = parsed.path.rstrip("/") or "/"
         return urlunparse((scheme, parsed.netloc.lower(), path, "", "", ""))
+
+    @staticmethod
+    def _is_allowed_domain(domain: str, allow_domains: set[str]) -> bool:
+        return any(domain == allowed or domain.endswith(f".{allowed}") for allowed in allow_domains)
 
     @staticmethod
     def _section_tags(section: str, subsection: str) -> list[str]:
