@@ -58,3 +58,17 @@ sources:
       - rag
       - multi-agent-systems
       - llm
+
+  - name: system-design-academy
+    type: catalog
+    url: https://raw.githubusercontent.com/systemdesign42/system-design-academy/main/README.md
+    catalog_page: https://github.com/systemdesign42/system-design-academy/blob/main/README.md
+    allow_domains:
+      - systemdesign.one
+      - newsletter.systemdesign.one
+    max_articles: 300
+    min_content_chars: 500
+    tags:
+      - system-design
+      - production-architecture
+      - engineering-case-study
