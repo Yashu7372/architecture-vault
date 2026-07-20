@@ -5,7 +5,7 @@ import re
 from collectors.reader_backed_substack_course_collector import (
     DETAILED_CURRICULUM_MARKERS,
 )
-from collectors.substack_course_collector import ArticleSnapshot
+from collectors.substack_course_collector import ArticleSnapshot, CourseLesson, DAY_RE, OUTPUT_RE
 from collectors.anonymous_reader_daily_course_collector import (
     AnonymousReaderDailyCourseCollector,
 )
@@ -23,7 +23,7 @@ class StrictPublicDailyCourseCollector(AnonymousReaderDailyCourseCollector):
             )
             lessons = self._discover_lessons_from_markdown(markdown, source)
             if lessons:
-                return lessons
+                return self._repair_curriculum_metadata(markdown, lessons)
         except Exception:
             pass
         return super().discover_lessons(source)
@@ -78,8 +78,6 @@ class StrictPublicDailyCourseCollector(AnonymousReaderDailyCourseCollector):
 
     @staticmethod
     def _detailed_curriculum_section(markdown: str) -> str:
-        # Prefer the last detailed Module 1 heading. The page title and roadmap
-        # repeat the course phrase before the actual Day 1..N list.
         module_one_matches = list(
             re.finditer(r"(?mi)^#{1,4}\s+module\s+1\s*:", markdown)
         )
@@ -99,6 +97,82 @@ class StrictPublicDailyCourseCollector(AnonymousReaderDailyCourseCollector):
         if starts:
             return markdown[max(starts):]
         return markdown
+
+    def _repair_curriculum_metadata(
+        self,
+        markdown: str,
+        lessons: list[CourseLesson],
+    ) -> list[CourseLesson]:
+        """Merge correctly positioned headings with article URLs emitted elsewhere by the reader."""
+        module = "Uncategorized Module"
+        week = "Uncategorized Week"
+        positioned: dict[int, dict] = {}
+        pending_day: int | None = None
+
+        for raw_line in markdown.splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+            plain = self._markdown_plain_text(line)
+            heading = plain.lstrip("# ").strip()
+            lower = heading.lower()
+            if lower.startswith("module "):
+                module = heading
+                week = "Uncategorized Week"
+                pending_day = None
+                continue
+            if lower.startswith("week "):
+                week = heading
+                pending_day = None
+                continue
+
+            output_match = OUTPUT_RE.search(plain)
+            if output_match and pending_day in positioned:
+                positioned[pending_day]["expected_output"] = output_match.group(1).strip()
+                continue
+
+            match = DAY_RE.search(plain)
+            if not match:
+                continue
+            day = int(match.group(1))
+            if not self._module_contains_day(module, day):
+                pending_day = None
+                continue
+            pending_day = day
+            positioned[day] = {
+                "title": match.group(2).strip(" :-–—"),
+                "module": module,
+                "week": week,
+                "expected_output": "",
+            }
+
+        repaired = []
+        for lesson in lessons:
+            correct = positioned.get(lesson.day)
+            if not correct:
+                repaired.append(lesson)
+                continue
+            repaired.append(
+                CourseLesson(
+                    day=lesson.day,
+                    title=correct["title"] or lesson.title,
+                    expected_output=correct["expected_output"] or lesson.expected_output,
+                    module=correct["module"],
+                    week=correct["week"],
+                    article_url=lesson.article_url,
+                    curriculum_url=lesson.curriculum_url,
+                    order=lesson.order,
+                )
+            )
+        return repaired
+
+    @staticmethod
+    def _module_contains_day(module: str, day: int) -> bool:
+        match = re.search(r"days?\s+(\d+)\s*[-–—]\s*(\d+)", module, re.IGNORECASE)
+        if not match:
+            return False
+        start, end = int(match.group(1)), int(match.group(2))
+        return start <= day <= end
 
     def _article_from_reader_markdown(
         self,
