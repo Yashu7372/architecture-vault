@@ -14,15 +14,11 @@ class SubstackCollector(BaseCollector):
 
     def collect(self, source: dict) -> list[KnowledgeDocument]:
         if source.get("course_mode"):
-            from collectors.substack_course_collector import SubstackCourseCollector
+            from collectors.daily_course_collector import DailyCourseCollector
 
-            collector = SubstackCourseCollector()
+            collector = DailyCourseCollector()
             documents = collector.collect(source)
             self.last_report = collector.last_report
-            for result in self.last_report.get("results", []):
-                if result.get("status") in {"public", "preview", "curriculum-only"}:
-                    result["access_level"] = result["status"]
-                    result["status"] = "collected"
             return documents
 
         docs: list[KnowledgeDocument] = []
