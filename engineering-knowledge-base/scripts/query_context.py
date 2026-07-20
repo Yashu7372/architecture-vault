@@ -5,14 +5,24 @@ from pathlib import Path
 import json
 import re
 import sqlite3
+import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-DB_FILE = ROOT / "output" / "context" / "context.sqlite"
+sys.path.insert(0, str(ROOT))
+
+from settings import OUTPUT_DIR
+
+DB_FILE = OUTPUT_DIR / "context" / "context.sqlite"
 
 
 def compact(text: str, limit: int = 900) -> str:
     value = re.sub(r"\s+", " ", text).strip()
     return value if len(value) <= limit else value[: limit - 1].rstrip() + "…"
+
+
+def normalize_fts_query(query: str) -> str:
+    tokens = [token for token in re.findall(r"[A-Za-z0-9_.+-]+", query) if len(token) > 1]
+    return " OR ".join(f'"{token}"' for token in tokens) or query
 
 
 def fts_available(connection: sqlite3.Connection) -> bool:
@@ -51,25 +61,28 @@ def search(
             LIMIT ?
         """
         try:
-            rows = connection.execute(sql, [query, *params, limit]).fetchall()
+            rows = connection.execute(sql, [normalize_fts_query(query), *params, limit]).fetchall()
         except sqlite3.OperationalError:
             rows = []
     else:
         rows = []
 
     if not rows:
-        like = f"%{query}%"
+        tokens = [token for token in re.findall(r"[A-Za-z0-9_.+-]+", query) if len(token) > 1]
+        patterns = [f"%{token}%" for token in tokens[:8]] or [f"%{query}%"]
+        term_clause = " OR ".join("(c.text LIKE ? OR c.heading LIKE ? OR d.title LIKE ?)" for _ in patterns)
+        like_params = [value for pattern in patterns for value in (pattern, pattern, pattern)]
         sql = f"""
             SELECT
                 c.chunk_id, c.document_id, d.title, d.url, d.source_name,
                 d.published_date, c.heading, c.text, c.token_estimate, 0.0 AS rank
             FROM chunks c
             JOIN documents d ON d.document_id = c.document_id
-            WHERE (c.text LIKE ? OR c.heading LIKE ? OR d.title LIKE ?){where_suffix}
+            WHERE ({term_clause}){where_suffix}
             ORDER BY d.title, c.ordinal
             LIMIT ?
         """
-        rows = connection.execute(sql, [like, like, like, *params, limit]).fetchall()
+        rows = connection.execute(sql, [*like_params, *params, limit]).fetchall()
 
     columns = [
         "chunk_id",
