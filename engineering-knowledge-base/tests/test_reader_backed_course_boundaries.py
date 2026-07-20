@@ -5,18 +5,21 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from collectors.reader_backed_substack_course_collector import (
-    ReaderBackedSubstackCourseCollector,
+from collectors.strict_public_daily_course_collector import (
+    StrictPublicDailyCourseCollector,
 )
 
 
 class ReaderBackedCourseBoundaryTest(unittest.TestCase):
-    def test_uses_detailed_curriculum_section_not_roadmap_state(self):
+    def test_uses_last_detailed_curriculum_marker_not_title_or_roadmap_state(self):
         markdown = """
+Title: 254-Lesson’s Distributed Log Processing System Implementation
 # Course
 #### The Definitive Roadmap
 * Module 9: Advanced Performance and Optimization (Days 241-270)
   * Week 37: Storage Optimization
+1. [Day 1: Roadmap duplicate](https://course.example/p/day-1-roadmap)
+   * Output: Wrong roadmap placement
 
 ### 254-Lesson’s Distributed Log Processing System Implementation
 ## Module 1: Foundations of Log Processing (Days 1-30)
@@ -26,13 +29,14 @@ class ReaderBackedCourseBoundaryTest(unittest.TestCase):
 2. [Day 2: Build a generator](https://course.example/p/day-2-generator)
    * Output: Configurable event generator
 """
-        collector = ReaderBackedSubstackCourseCollector()
+        collector = StrictPublicDailyCourseCollector()
         lessons = collector._discover_lessons_from_markdown(
             markdown,
             {"url": "https://course.example/p/curriculum"},
         )
 
         self.assertEqual(2, len(lessons))
+        self.assertEqual("Set up development environment", lessons[0].title)
         self.assertEqual("Module 1: Foundations of Log Processing (Days 1-30)", lessons[0].module)
         self.assertEqual("Week 1: Setting Up the Infrastructure", lessons[0].week)
         self.assertEqual("Initialized repository", lessons[0].expected_output)
@@ -51,7 +55,7 @@ The parser normalizes Apache, Nginx, and JSON records.
 
 Implementation code that must not be retained.
 """
-        collector = ReaderBackedSubstackCourseCollector()
+        collector = StrictPublicDailyCourseCollector()
         collector._active_source = {
             "verified_public_through_day": 3,
             "reader_preview_max_chars": 7000,
@@ -69,12 +73,14 @@ Implementation code that must not be retained.
         self.assertNotIn("Source code repository", snapshot.content)
         self.assertNotIn("Implementation code", snapshot.content)
 
-    def test_verified_free_day_can_keep_public_reader_content(self):
+    def test_verified_free_day_overrides_signup_marker_after_public_body(self):
         raw = """Title: Day 2
 Markdown Content:
 A detailed public lesson explaining event generation, rate control, and validation.
+
+Continue reading this post for free
 """
-        collector = ReaderBackedSubstackCourseCollector()
+        collector = StrictPublicDailyCourseCollector()
         collector._active_source = {"verified_public_through_day": 3}
         snapshot = collector._article_from_reader_markdown(
             raw,
@@ -84,7 +90,9 @@ A detailed public lesson explaining event generation, rate control, and validati
         )
 
         self.assertEqual("public", snapshot.access_level)
+        self.assertFalse(snapshot.explicit_paywall)
         self.assertIn("rate control", snapshot.content)
+        self.assertNotIn("Continue reading", snapshot.content)
 
 
 if __name__ == "__main__":
