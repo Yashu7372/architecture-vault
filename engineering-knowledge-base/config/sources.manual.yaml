@@ -78,7 +78,7 @@ sources:
     course_mode: true
     public_only: true
     reader_fallback: true
-    verified_public_through_day: 3
+    verified_public_through_day: 25
     reader_preview_max_chars: 7000
     track: python-javascript
     author: System Design Course
