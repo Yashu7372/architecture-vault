@@ -14,11 +14,11 @@ class SubstackCollector(BaseCollector):
 
     def collect(self, source: dict) -> list[KnowledgeDocument]:
         if source.get("course_mode"):
-            from collectors.anonymous_reader_daily_course_collector import (
-                AnonymousReaderDailyCourseCollector,
+            from collectors.strict_public_daily_course_collector import (
+                StrictPublicDailyCourseCollector,
             )
 
-            collector = AnonymousReaderDailyCourseCollector()
+            collector = StrictPublicDailyCourseCollector()
             documents = collector.collect(source)
             self.last_report = collector.last_report
             return documents
