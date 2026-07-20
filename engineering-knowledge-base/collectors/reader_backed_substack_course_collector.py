@@ -26,10 +26,26 @@ EXTRA_PAYWALL_MARKERS = (
     "claim my free post",
     "or purchase a paid subscription",
 )
+DETAILED_CURRICULUM_MARKERS = (
+    "254-lesson’s distributed log processing system implementation",
+    "254-lesson's distributed log processing system implementation",
+    "254-lesson distributed log processing system implementation",
+)
+DEFAULT_PREVIEW_STOP_MARKERS = (
+    "\n**source code repository:",
+    "\nsource code repository:",
+    "\ngithub :",
+    "\ngithub:",
+    "\nlog parser implementation",
+    "\nfirst, let's create",
+    "\nfirst, let’s create",
+    "\nlet's start with a simple parser framework",
+    "\nlet’s start with a simple parser framework",
+)
 
 
 class ReaderBackedSubstackCourseCollector(SubstackCourseCollector):
-    """Use Jina Reader only when direct public Substack requests are blocked."""
+    """Use a public text reader only when direct anonymous Substack requests are blocked."""
 
     def __init__(self, session: requests.Session | None = None):
         super().__init__(session)
@@ -49,7 +65,7 @@ class ReaderBackedSubstackCourseCollector(SubstackCourseCollector):
             lessons = self._discover_lessons_from_markdown(markdown, source)
             if not lessons:
                 raise ValueError(
-                    f"No Day N curriculum lessons found at {source['url']} through Jina Reader"
+                    f"No Day N curriculum lessons found at {source['url']} through the public reader"
                 )
             return lessons
 
@@ -85,27 +101,23 @@ class ReaderBackedSubstackCourseCollector(SubstackCourseCollector):
 
     def _reader_fetch(self, target_url: str, direct_error: Exception) -> str:
         reader_url = f"https://r.jina.ai/{target_url}"
-        headers = {
-            "Accept": "text/plain",
-            "X-No-Cache": "true",
-            "X-With-Generated-Alt": "true",
-        }
         try:
             response = self.session.get(
                 reader_url,
                 timeout=int(self._active_source.get("reader_timeout", 90)),
-                headers=headers,
+                headers={"Accept": "text/plain"},
             )
             response.raise_for_status()
             return response.text
         except Exception as reader_error:
             raise RuntimeError(
                 f"Direct public fetch failed for {target_url}: {direct_error}; "
-                f"Jina Reader fallback failed: {reader_error}"
+                f"public reader fallback failed: {reader_error}"
             ) from reader_error
 
     def _discover_lessons_from_markdown(self, markdown: str, source: dict) -> list[CourseLesson]:
         curriculum_url = source["url"]
+        markdown = self._detailed_curriculum_section(markdown)
         module = "Uncategorized Module"
         week = "Uncategorized Week"
         by_day: dict[int, CourseLesson] = {}
@@ -120,6 +132,7 @@ class ReaderBackedSubstackCourseCollector(SubstackCourseCollector):
             lower_heading = heading.lower()
             if lower_heading.startswith("module "):
                 module = heading
+                week = "Uncategorized Week"
                 continue
             if lower_heading.startswith("week "):
                 week = heading
@@ -207,6 +220,14 @@ class ReaderBackedSubstackCourseCollector(SubstackCourseCollector):
             marker in lowered for marker in (*PAYWALL_MARKERS, *EXTRA_PAYWALL_MARKERS)
         )
         content = self._truncate_public_markdown(content)
+
+        lesson_day = self._day_from_article_url(article_url)
+        verified_public_through = int(self._active_source.get("verified_public_through_day", 0))
+        force_preview = bool(lesson_day and lesson_day > verified_public_through)
+        if force_preview:
+            content = self._introductory_preview(content)
+            explicit_paywall = True
+
         links = tuple(
             dict.fromkeys(
                 urljoin(article_url, href)
@@ -217,7 +238,7 @@ class ReaderBackedSubstackCourseCollector(SubstackCourseCollector):
         if len(content) < min_preview_chars:
             access_level = "curriculum-only"
             content = ""
-        elif explicit_paywall or len(content) < min_public_chars:
+        elif force_preview or explicit_paywall or len(content) < min_public_chars:
             access_level = "preview"
         else:
             access_level = "public"
@@ -229,6 +250,43 @@ class ReaderBackedSubstackCourseCollector(SubstackCourseCollector):
             access_level=access_level,
             explicit_paywall=explicit_paywall,
         )
+
+    def _introductory_preview(self, content: str) -> str:
+        lowered = content.lower()
+        markers = [
+            *DEFAULT_PREVIEW_STOP_MARKERS,
+            *[str(marker).lower() for marker in self._active_source.get("reader_preview_stop_markers", [])],
+        ]
+        boundaries = [lowered.find(marker) for marker in markers if lowered.find(marker) >= 0]
+        if boundaries:
+            content = content[: min(boundaries)]
+        max_chars = int(self._active_source.get("reader_preview_max_chars", 7000))
+        if len(content) > max_chars:
+            content = content[:max_chars].rsplit("\n", 1)[0]
+        return content.strip()
+
+    @staticmethod
+    def _detailed_curriculum_section(markdown: str) -> str:
+        lowered = markdown.lower()
+        starts = []
+        for marker in DETAILED_CURRICULUM_MARKERS:
+            index = lowered.find(marker)
+            if index >= 0:
+                starts.append(index)
+        if starts:
+            return markdown[min(starts):]
+
+        module_one_matches = list(
+            re.finditer(r"(?mi)^#{1,4}\s+module\s+1\s*:", markdown)
+        )
+        if module_one_matches:
+            return markdown[module_one_matches[-1].start():]
+        return markdown
+
+    @staticmethod
+    def _day_from_article_url(article_url: str) -> int | None:
+        match = re.search(r"/p/day-(\d+)(?:-|$)", article_url, re.IGNORECASE)
+        return int(match.group(1)) if match else None
 
     @staticmethod
     def _truncate_public_markdown(content: str) -> str:
