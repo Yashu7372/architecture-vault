@@ -1,0 +1,57 @@
+name: SDCourse First Five Lessons
+
+on:
+  push:
+    branches:
+      - feature/sdcourse-daily-learning-builder
+    paths:
+      - "engineering-knowledge-base/**"
+      - ".github/workflows/sdcourse-first-five.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-first-five:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: engineering-knowledge-base/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r engineering-knowledge-base/requirements.txt
+
+      - name: Scrape and complete first five lessons
+        run: |
+          rm -rf engineering-knowledge-base/output
+          python engineering-knowledge-base/scripts/run_daily_course_learning.py \
+            --track python-js \
+            --lessons-per-run 5
+
+      - name: Verify daily outputs
+        run: |
+          test -f engineering-knowledge-base/output/daily-learning/sdcourse-python-js/day-001/01-public-source.md
+          test -f engineering-knowledge-base/output/daily-learning/sdcourse-python-js/day-001/02-completed-lesson.md
+          test -f engineering-knowledge-base/output/daily-learning/sdcourse-python-js/day-005/01-public-source.md
+          test -f engineering-knowledge-base/output/daily-learning/sdcourse-python-js/day-005/02-completed-lesson.md
+          find engineering-knowledge-base/output/daily-learning/sdcourse-python-js -maxdepth 2 -type f | sort
+
+      - name: Upload first-five learning artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdcourse-first-five-lessons
+          path: |
+            engineering-knowledge-base/output/daily-learning/sdcourse-python-js
+            engineering-knowledge-base/output/reports/sdcourse-python-js-collection.*
+            engineering-knowledge-base/output/scheduler/sdcourse-state.json
+          if-no-files-found: error
+          retention-days: 14
