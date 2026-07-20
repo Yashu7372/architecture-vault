@@ -37,11 +37,15 @@ jobs:
         run: pip install -r engineering-knowledge-base/requirements.txt
 
       - name: Scrape and complete first five lessons
+        shell: bash
         run: |
           rm -rf engineering-knowledge-base/output
+          mkdir -p engineering-knowledge-base/output/diagnostics
+          set -o pipefail
           python engineering-knowledge-base/scripts/run_daily_course_learning.py \
             --track python-js \
-            --lessons-per-run 5
+            --lessons-per-run 5 \
+            2>&1 | tee engineering-knowledge-base/output/diagnostics/first-five-run.log
 
       - name: List generated outputs
         run: |
@@ -51,6 +55,8 @@ jobs:
           cat engineering-knowledge-base/output/scheduler/sdcourse-state.json || true
           echo "Collection report:"
           cat engineering-knowledge-base/output/reports/sdcourse-python-js-collection.json || true
+          echo "Run diagnostics:"
+          cat engineering-knowledge-base/output/diagnostics/first-five-run.log || true
 
       - name: Upload first-five learning artifacts
         if: always()
