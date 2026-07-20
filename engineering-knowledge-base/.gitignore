@@ -13,6 +13,7 @@ output/MASTER_INDEX.md
 output/indexes/
 output/context/
 output/reports/
+output/courses/
 output/notes/*
 !output/notes/starter/
 !output/notes/starter/**
