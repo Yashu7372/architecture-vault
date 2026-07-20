@@ -1,11 +1,7 @@
 from pathlib import Path
-import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
-
-from settings import OUTPUT_DIR
-
+OUTPUT_DIR = ROOT / "output"
 NOTES_DIR = OUTPUT_DIR / "notes"
 INDEX_FILE = OUTPUT_DIR / "MASTER_INDEX.md"
 
