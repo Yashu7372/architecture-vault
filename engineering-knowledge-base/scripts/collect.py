@@ -18,9 +18,9 @@ from collectors.pdf_collector import PdfCollector
 from collectors.substack_collector import SubstackCollector
 from collectors.web_collector import WebCollector
 from collectors.youtube_collector import YouTubeCollector
-from settings import OUTPUT_DIR
 
 CONFIG_FILES = [ROOT / "config" / "sources.manual.yaml", ROOT / "config" / "sources.generated.yaml"]
+OUTPUT_DIR = ROOT / "output"
 NOTES_DIR = OUTPUT_DIR / "notes"
 INDEX_DIR = OUTPUT_DIR / "indexes"
 MANIFEST_FILE = OUTPUT_DIR / "manifest.json"
