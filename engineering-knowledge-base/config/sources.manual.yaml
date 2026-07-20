@@ -77,6 +77,9 @@ sources:
     type: substack
     course_mode: true
     public_only: true
+    reader_fallback: true
+    verified_public_through_day: 3
+    reader_preview_max_chars: 7000
     track: python-javascript
     author: System Design Course
     publication_url: https://sdcourse.substack.com/
@@ -96,6 +99,9 @@ sources:
     type: substack
     course_mode: true
     public_only: true
+    reader_fallback: true
+    verified_public_through_day: 0
+    reader_preview_max_chars: 7000
     track: java-spring-boot
     author: System Design Course
     publication_url: https://sdcourse.substack.com/
