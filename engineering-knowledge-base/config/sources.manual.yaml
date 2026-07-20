@@ -72,3 +72,47 @@ sources:
       - system-design
       - production-architecture
       - engineering-case-study
+
+  - name: sdcourse-python-js
+    type: substack
+    course_mode: true
+    public_only: true
+    reader_fallback: true
+    verified_public_through_day: 3
+    reader_preview_max_chars: 7000
+    track: python-javascript
+    author: System Design Course
+    publication_url: https://sdcourse.substack.com/
+    url: https://sdcourse.substack.com/p/hands-on-distributed-systems-with
+    max_articles: 300
+    min_public_chars: 600
+    min_preview_chars: 120
+    tags:
+      - system-design
+      - distributed-systems
+      - logstream
+      - hands-on-course
+      - python
+      - javascript
+
+  - name: sdcourse-java-spring
+    type: substack
+    course_mode: true
+    public_only: true
+    reader_fallback: true
+    verified_public_through_day: 0
+    reader_preview_max_chars: 7000
+    track: java-spring-boot
+    author: System Design Course
+    publication_url: https://sdcourse.substack.com/
+    url: https://sdcourse.substack.com/p/curriculum-distributed-log-implementation
+    max_articles: 300
+    min_public_chars: 600
+    min_preview_chars: 120
+    tags:
+      - system-design
+      - distributed-systems
+      - logstream
+      - hands-on-course
+      - java
+      - spring-boot

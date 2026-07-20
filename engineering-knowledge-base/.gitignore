@@ -7,12 +7,15 @@ input/private/
 input/internal/
 output/raw-private/
 
-# Generated ingestion and retrieval artifacts stay local.
+# Generated ingestion, learning, scheduling, and retrieval artifacts stay local.
 output/manifest.json
 output/MASTER_INDEX.md
 output/indexes/
 output/context/
 output/reports/
+output/courses/
+output/daily-learning/
+output/scheduler/
 output/notes/*
 !output/notes/starter/
 !output/notes/starter/**
