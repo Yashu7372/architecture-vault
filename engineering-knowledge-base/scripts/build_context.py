@@ -9,9 +9,13 @@ import hashlib
 import json
 import re
 import sqlite3
+import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT_DIR = ROOT / "output"
+sys.path.insert(0, str(ROOT))
+
+from settings import OUTPUT_DIR
+
 MANIFEST_FILE = OUTPUT_DIR / "manifest.json"
 CONTEXT_DIR = OUTPUT_DIR / "context"
 DB_FILE = CONTEXT_DIR / "context.sqlite"
