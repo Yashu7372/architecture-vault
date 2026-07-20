@@ -1,18 +1,21 @@
+from datetime import datetime, timezone
 from pathlib import Path
 import hashlib
 import json
 import sys
+
 import yaml
 from slugify import slugify
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from collectors.web_collector import WebCollector
-from collectors.substack_collector import SubstackCollector
-from collectors.github_collector import GitHubCollector
 from collectors.arxiv_collector import ArxivCollector
+from collectors.catalog_collector import CatalogCollector
+from collectors.github_collector import GitHubCollector
 from collectors.pdf_collector import PdfCollector
+from collectors.substack_collector import SubstackCollector
+from collectors.web_collector import WebCollector
 from collectors.youtube_collector import YouTubeCollector
 
 CONFIG_FILES = [ROOT / "config" / "sources.manual.yaml", ROOT / "config" / "sources.generated.yaml"]
@@ -28,6 +31,7 @@ INDEX_DIR.mkdir(parents=True, exist_ok=True)
 def get_collector(source_type: str):
     collectors = {
         "web": WebCollector(),
+        "catalog": CatalogCollector(),
         "substack": SubstackCollector(),
         "github": GitHubCollector(),
         "arxiv": ArxivCollector(),
@@ -39,8 +43,12 @@ def get_collector(source_type: str):
     return collectors[source_type]
 
 
-def digest(value: str) -> str:
-    return hashlib.sha256(value.encode("utf-8")).hexdigest()[:12]
+def digest(value: str, length: int = 12) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()[:length]
+
+
+def document_id(doc) -> str:
+    return f"doc-{digest(doc.url, 16)}"
 
 
 def write_note(doc):
@@ -49,16 +57,24 @@ def write_note(doc):
     filename = f"{slugify(doc.title)[:90]}-{digest(doc.url)}.md"
     path = folder / filename
     tags = ", ".join(doc.tags)
+    metadata_json = json.dumps(doc.metadata, indent=2, ensure_ascii=False, sort_keys=True)
     content = f"""# {doc.title}
 
 ## Metadata
 
+- Document ID: {document_id(doc)}
 - Source Name: {doc.source_name}
 - Source Type: {doc.source_type}
 - URL: {doc.url}
 - Author: {doc.author or ""}
 - Published Date: {doc.published_date or ""}
 - Tags: {tags}
+
+### Source Context
+
+```json
+{metadata_json}
+```
 
 ---
 
@@ -133,17 +149,23 @@ def write_source_index(source_name: str, items: list[dict]):
     lines = [
         f"# {source_name}",
         "",
-        "| No | Title | Type | Date | Tags | Notes |",
-        "|---:|---|---|---|---|---|",
+        "| No | Title | Section | Type | Date | Tags | Notes |",
+        "|---:|---|---|---|---|---|---|",
     ]
     for index, item in enumerate(items, start=1):
         tags = ", ".join(item.get("tags", []))
-        lines.append(f"| {index} | [{item['title']}]({item['url']}) | {item['source_type']} | {item.get('published_date') or ''} | {tags} | [{item['note_file']}]({item['note_file']}) |")
+        section = item.get("metadata", {}).get("catalog_section", "")
+        lines.append(
+            f"| {index} | [{item['title']}]({item['url']}) | {section} | "
+            f"{item['source_type']} | {item.get('published_date') or ''} | {tags} | "
+            f"[{item['note_file']}]({item['note_file']}) |"
+        )
     index_file.write_text("\n".join(lines), encoding="utf-8")
 
 
 def main():
     manifest = []
+    collected_at = datetime.now(timezone.utc).isoformat()
     for source in load_sources():
         print(f"Collecting: {source['name']} ({source['type']})")
         collector = get_collector(source["type"])
@@ -156,12 +178,18 @@ def main():
         for doc in docs:
             note_path = write_note(doc)
             item = {
+                "document_id": document_id(doc),
                 "title": doc.title,
                 "url": doc.url,
                 "source_name": doc.source_name,
                 "source_type": doc.source_type,
+                "author": doc.author,
                 "published_date": doc.published_date,
+                "collected_at": collected_at,
+                "content_hash": digest(doc.content, 32),
                 "tags": doc.tags,
+                "links": doc.links,
+                "metadata": doc.metadata,
                 "note_file": str(note_path.relative_to(OUTPUT_DIR)),
             }
             manifest.append(item)
