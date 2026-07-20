@@ -11,35 +11,39 @@ from collectors.strict_public_daily_course_collector import (
 
 
 class ReaderBackedCourseBoundaryTest(unittest.TestCase):
-    def test_uses_last_detailed_curriculum_marker_not_title_or_roadmap_state(self):
+    def test_maps_roadmap_modules_and_week_resets_to_lesson_rows(self):
         markdown = """
-Title: 254-Lesson’s Distributed Log Processing System Implementation
-# Course
-#### The Definitive Roadmap
-* Module 9: Advanced Performance and Optimization (Days 241-270)
-  * Week 37: Storage Optimization
-1. [Day 1: Roadmap duplicate](https://course.example/p/day-1-roadmap)
-   * Output: Wrong roadmap placement
+* Module 1: Foundations of Log Processing (Days 1-30)
+  * Week 1: Setting Up the Infrastructure
+  * Week 2: Network-Based Log Collection
+* Module 2: Scalable Log Processing (Days 31-60)
+  * Week 3: Message Queues
 
-### 254-Lesson’s Distributed Log Processing System Implementation
-## Module 1: Foundations of Log Processing (Days 1-30)
-### Week 1: Setting Up the Infrastructure
 1. [Day 1: Set up development environment](https://course.example/p/day-1-setup)
    * Output: Initialized repository
 2. [Day 2: Build a generator](https://course.example/p/day-2-generator)
    * Output: Configurable event generator
+7. [Day 7: Integrate local pipeline](https://course.example/p/day-7-integrate)
+   * Output: Local pipeline
+
+Integrate All Components (Day 8 to Day 14) into a Distributed Logging Platform
+
+1. [Day 8: Build TCP server](https://course.example/p/day-8-tcp)
+   * Output: TCP server
 """
         collector = StrictPublicDailyCourseCollector()
-        lessons = collector._discover_lessons_from_markdown(
+        base_lessons = collector._discover_lessons_from_markdown(
             markdown,
             {"url": "https://course.example/p/curriculum"},
         )
+        lessons = collector._repair_curriculum_metadata(markdown, base_lessons)
+        by_day = {lesson.day: lesson for lesson in lessons}
 
-        self.assertEqual(2, len(lessons))
-        self.assertEqual("Set up development environment", lessons[0].title)
-        self.assertEqual("Module 1: Foundations of Log Processing (Days 1-30)", lessons[0].module)
-        self.assertEqual("Week 1: Setting Up the Infrastructure", lessons[0].week)
-        self.assertEqual("Initialized repository", lessons[0].expected_output)
+        self.assertEqual("Module 1: Foundations of Log Processing (Days 1-30)", by_day[1].module)
+        self.assertEqual("Week 1: Setting Up the Infrastructure", by_day[1].week)
+        self.assertEqual("Initialized repository", by_day[1].expected_output)
+        self.assertEqual("Week 2: Network-Based Log Collection", by_day[8].week)
+        self.assertEqual("Build TCP server", by_day[8].title)
 
     def test_later_day_reader_content_is_limited_to_public_intro(self):
         raw = """Title: Day 4
