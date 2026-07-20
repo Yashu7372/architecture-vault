@@ -15,9 +15,10 @@ sys.path.insert(0, str(ROOT))
 
 from collectors.catalog_collector import CatalogCollector, CatalogEntry
 from collectors.web_collector import DEFAULT_HEADERS
+from settings import OUTPUT_DIR
 
 CONFIG_FILES = [ROOT / "config" / "sources.manual.yaml", ROOT / "config" / "sources.generated.yaml"]
-REPORT_DIR = ROOT / "output" / "reports"
+REPORT_DIR = OUTPUT_DIR / "reports"
 
 
 def load_catalog_source(name: str) -> dict:
