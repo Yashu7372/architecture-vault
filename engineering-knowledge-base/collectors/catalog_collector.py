@@ -10,7 +10,7 @@ from collectors.web_collector import DEFAULT_HEADERS, WebCollector
 
 
 HEADING_RE = re.compile(r"^(#{2,6})\s+(.+?)\s*$")
-LINK_RE = re.compile(r"^-\s+\[([^\]]+)\]\((https?://[^)]+)\)")
+LINK_RE = re.compile(r"\[([^\]]+)\]\((https?://[^)]+)\)")
 
 
 @dataclass(frozen=True)
@@ -20,10 +20,11 @@ class CatalogEntry:
     section: str
     subsection: str
     order: int
+    locations: tuple[tuple[str, str], ...]
 
 
 class CatalogCollector(BaseCollector):
-    """Collect article links from a Markdown catalog and extract every target page."""
+    """Collect article links from a Markdown catalog and extract every unique target page."""
 
     def __init__(self, session: requests.Session | None = None):
         self.session = session or requests.Session()
@@ -32,13 +33,16 @@ class CatalogCollector(BaseCollector):
 
     def collect(self, source: dict) -> list[KnowledgeDocument]:
         entries = self.discover_entries(source)
+        skip_urls = {self._canonical_url(url) for url in source.get("skip_urls", [])}
+        entries = [entry for entry in entries if entry.url not in skip_urls]
         max_articles = int(source.get("max_articles", len(entries)))
         min_content_chars = int(source.get("min_content_chars", 500))
         docs: list[KnowledgeDocument] = []
 
         for entry in entries[:max_articles]:
             tags = list(source.get("tags", []))
-            tags.extend(self._section_tags(entry.section, entry.subsection))
+            for section, subsection in entry.locations:
+                tags.extend(self._section_tags(section, subsection))
             article_source = {
                 **source,
                 "document_type": "web",
@@ -51,11 +55,17 @@ class CatalogCollector(BaseCollector):
                     "catalog_subsection": entry.subsection,
                     "catalog_order": entry.order,
                     "catalog_link_title": entry.title,
+                    "catalog_locations": [
+                        {"section": section, "subsection": subsection}
+                        for section, subsection in entry.locations
+                    ],
                 },
             }
             doc = self.web_collector.extract_url(entry.url, article_source)
             if not doc or len(doc.content) < min_content_chars:
                 continue
+            if source.get("prefer_catalog_title"):
+                doc.title = entry.title
             doc.metadata["catalog_discovered_title"] = entry.title
             docs.append(doc)
         return docs
@@ -69,11 +79,11 @@ class CatalogCollector(BaseCollector):
 
         section = "Uncategorized"
         subsection = "General"
-        entries: list[CatalogEntry] = []
-        seen_urls: set[str] = set()
+        records: dict[str, dict] = {}
 
         for line in markdown.splitlines():
-            heading = HEADING_RE.match(line.strip())
+            stripped = line.strip()
+            heading = HEADING_RE.match(stripped)
             if heading:
                 level = len(heading.group(1))
                 value = self._clean_heading(heading.group(2))
@@ -84,29 +94,41 @@ class CatalogCollector(BaseCollector):
                     subsection = value
                 continue
 
-            link = LINK_RE.match(line.strip())
-            if not link:
+            if not stripped.startswith("-"):
                 continue
-            title, raw_url = link.groups()
-            url = self._canonical_url(raw_url)
-            domain = urlparse(url).netloc.lower()
-            if allow_domains and domain not in allow_domains:
-                continue
-            if include_sections and section.lower() not in include_sections:
-                continue
-            if url in seen_urls:
-                continue
-            seen_urls.add(url)
-            entries.append(
-                CatalogEntry(
-                    title=title.strip(),
-                    url=url,
-                    section=section,
-                    subsection=subsection,
-                    order=len(entries) + 1,
-                )
+            for link in LINK_RE.finditer(stripped):
+                title, raw_url = link.groups()
+                url = self._canonical_url(raw_url)
+                domain = urlparse(url).netloc.lower()
+                if allow_domains and domain not in allow_domains:
+                    continue
+                if include_sections and section.lower() not in include_sections:
+                    continue
+
+                location = (section, subsection)
+                if url not in records:
+                    records[url] = {
+                        "title": title.strip(),
+                        "url": url,
+                        "section": section,
+                        "subsection": subsection,
+                        "order": len(records) + 1,
+                        "locations": [location],
+                    }
+                elif location not in records[url]["locations"]:
+                    records[url]["locations"].append(location)
+
+        return [
+            CatalogEntry(
+                title=record["title"],
+                url=record["url"],
+                section=record["section"],
+                subsection=record["subsection"],
+                order=record["order"],
+                locations=tuple(record["locations"]),
             )
-        return entries
+            for record in records.values()
+        ]
 
     @staticmethod
     def _clean_heading(value: str) -> str:
