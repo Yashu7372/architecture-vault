@@ -137,6 +137,19 @@ class DailyCourseCollector(SubstackCourseCollector):
                     }
                 )
 
+        curriculum = [
+            {
+                "day": lesson.day,
+                "order": lesson.order,
+                "title": lesson.title,
+                "expected_output": lesson.expected_output,
+                "module": lesson.module,
+                "week": lesson.week,
+                "article_url": lesson.article_url,
+                "curriculum_url": lesson.curriculum_url,
+            }
+            for lesson in lessons
+        ]
         self.last_report = {
             "catalog_url": source["url"],
             "course_track": course_track,
@@ -156,6 +169,7 @@ class DailyCourseCollector(SubstackCourseCollector):
                 "deterministic-template": counts["deterministic-template"],
                 "deterministic-fallback": counts["deterministic-fallback"],
             },
+            "curriculum": curriculum,
             "results": results,
         }
         return documents
