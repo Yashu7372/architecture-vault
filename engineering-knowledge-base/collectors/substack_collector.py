@@ -19,6 +19,10 @@ class SubstackCollector(BaseCollector):
             collector = SubstackCourseCollector()
             documents = collector.collect(source)
             self.last_report = collector.last_report
+            for result in self.last_report.get("results", []):
+                if result.get("status") in {"public", "preview", "curriculum-only"}:
+                    result["access_level"] = result["status"]
+                    result["status"] = "collected"
             return documents
 
         docs: list[KnowledgeDocument] = []
