@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from collections import Counter
 from pathlib import Path
 from typing import Iterable
+from urllib.parse import urlparse, urlunparse
 import hashlib
 import json
 import re
@@ -23,6 +24,13 @@ HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 
 def digest(value: str, length: int = 16) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()[:length]
+
+
+def canonical_url(url: str) -> str:
+    parsed = urlparse(url.strip())
+    scheme = "https" if parsed.scheme in {"http", "https"} else parsed.scheme
+    path = parsed.path.rstrip("/") or "/"
+    return urlunparse((scheme, parsed.netloc.lower(), path, "", "", ""))
 
 
 def extracted_content(note_text: str) -> str:
@@ -81,7 +89,8 @@ def split_large_text(text: str, max_chars: int, overlap_chars: int) -> Iterable[
         if current:
             yield current.strip()
             overlap = current[-overlap_chars:].strip() if overlap_chars else ""
-            current = f"{overlap}\n\n{paragraph}".strip() if overlap else paragraph
+            next_value = f"{overlap}\n\n{paragraph}".strip() if overlap else paragraph
+            current = next_value if len(next_value) <= max_chars else paragraph
         else:
             current = paragraph
 
@@ -96,7 +105,8 @@ def build_chunks(document: dict, note_text: str, max_chars: int, overlap_chars: 
     for heading, section_text in markdown_sections(content):
         for text in split_large_text(section_text, max_chars, overlap_chars):
             ordinal += 1
-            chunk_id = f"chunk-{digest(f'{document["document_id"]}:{ordinal}:{text}')}"
+            seed = f"{document['document_id']}:{ordinal}:{text}"
+            chunk_id = f"chunk-{digest(seed)}"
             chunks.append(
                 {
                     "chunk_id": chunk_id,
@@ -123,12 +133,12 @@ def create_schema(connection: sqlite3.Connection) -> bool:
         PRAGMA journal_mode=WAL;
         PRAGMA foreign_keys=ON;
 
+        DROP TABLE IF EXISTS chunks_fts;
         DROP TABLE IF EXISTS metadata;
         DROP TABLE IF EXISTS relationships;
         DROP TABLE IF EXISTS tags;
         DROP TABLE IF EXISTS chunks;
         DROP TABLE IF EXISTS documents;
-        DROP TABLE IF EXISTS chunks_fts;
 
         CREATE TABLE metadata (
             key TEXT PRIMARY KEY,
@@ -194,8 +204,8 @@ def create_schema(connection: sqlite3.Connection) -> bool:
 
 
 def populate_database(connection: sqlite3.Connection, documents: list[dict], chunks: list[dict]) -> bool:
-    fts_available = create_schema(connection)
-    url_to_document = {document["url"]: document["document_id"] for document in documents}
+    fts_enabled = create_schema(connection)
+    url_to_document = {canonical_url(document["url"]): document["document_id"] for document in documents}
 
     for document in documents:
         connection.execute(
@@ -237,7 +247,7 @@ def populate_database(connection: sqlite3.Connection, documents: list[dict], chu
                 (document["document_id"], f"tag:{tag}"),
             )
         for link in document.get("links", []):
-            target_id = url_to_document.get(link)
+            target_id = url_to_document.get(canonical_url(link))
             if target_id and target_id != document["document_id"]:
                 connection.execute(
                     "INSERT OR IGNORE INTO relationships(source_id, relationship, target_id) VALUES (?, 'REFERENCES', ?)",
@@ -268,16 +278,16 @@ def populate_database(connection: sqlite3.Connection, documents: list[dict], chu
             ),
         )
 
-    connection.execute("INSERT INTO metadata(key, value) VALUES ('fts5_available', ?)", (str(fts_available).lower(),))
+    connection.execute("INSERT INTO metadata(key, value) VALUES ('fts5_available', ?)", (str(fts_enabled).lower(),))
     connection.execute("INSERT INTO metadata(key, value) VALUES ('schema_version', '1')")
     connection.commit()
-    return fts_available
+    return fts_enabled
 
 
 def build_graph(documents: list[dict]) -> dict:
     nodes: dict[str, dict] = {}
     edges: list[dict] = []
-    url_to_document = {document["url"]: document["document_id"] for document in documents}
+    url_to_document = {canonical_url(document["url"]): document["document_id"] for document in documents}
 
     for document in documents:
         document_id = document["document_id"]
@@ -304,7 +314,7 @@ def build_graph(documents: list[dict]) -> dict:
             edges.append({"source": document_id, "type": "TAGGED_WITH", "target": tag_id})
 
         for link in document.get("links", []):
-            target_id = url_to_document.get(link)
+            target_id = url_to_document.get(canonical_url(link))
             if target_id and target_id != document_id:
                 edges.append({"source": document_id, "type": "REFERENCES", "target": target_id})
 
@@ -312,7 +322,7 @@ def build_graph(documents: list[dict]) -> dict:
     return {"nodes": list(nodes.values()), "edges": list(unique_edges.values())}
 
 
-def write_context_index(documents: list[dict], chunks: list[dict], fts_available: bool) -> None:
+def write_context_index(documents: list[dict], chunks: list[dict], fts_enabled: bool) -> None:
     source_counts = Counter(document["source_name"] for document in documents)
     section_counts = Counter(
         document.get("metadata", {}).get("catalog_section", "Uncategorized") for document in documents
@@ -324,7 +334,7 @@ def write_context_index(documents: list[dict], chunks: list[dict], fts_available
         "",
         f"- Documents: {len(documents)}",
         f"- Chunks: {len(chunks)}",
-        f"- SQLite FTS5: {'enabled' if fts_available else 'unavailable; LIKE fallback required'}",
+        f"- SQLite FTS5: {'enabled' if fts_enabled else 'unavailable; LIKE fallback required'}",
         "",
         "## Sources",
         "",
@@ -377,10 +387,10 @@ def main() -> None:
     if DB_FILE.exists():
         DB_FILE.unlink()
     with sqlite3.connect(DB_FILE) as connection:
-        fts_available = populate_database(connection, valid_documents, chunks)
+        fts_enabled = populate_database(connection, valid_documents, chunks)
 
     GRAPH_FILE.write_text(json.dumps(build_graph(valid_documents), indent=2, ensure_ascii=False), encoding="utf-8")
-    write_context_index(valid_documents, chunks, fts_available)
+    write_context_index(valid_documents, chunks, fts_enabled)
     print(f"Built context layer: {len(valid_documents)} documents, {len(chunks)} chunks")
     print(f"Database: {DB_FILE}")
 
