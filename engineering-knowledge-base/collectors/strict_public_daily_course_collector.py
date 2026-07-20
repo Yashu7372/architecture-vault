@@ -147,9 +147,13 @@ class StrictPublicDailyCourseCollector(AnonymousReaderDailyCourseCollector):
             day_match = DAY_RE.search(plain)
             if not day_match:
                 continue
-            day = int(day_match.group(1))
             ordinal_match = re.match(r"^\s*(\d+)\.\s+", raw_line)
-            local_ordinal = int(ordinal_match.group(1)) if ordinal_match else None
+            if ordinal_match is None:
+                # Ignore prose such as "Integrate Day 8 to Day 14".
+                pending_day = None
+                continue
+            day = int(day_match.group(1))
+            local_ordinal = int(ordinal_match.group(1))
             if not seen_day:
                 seen_day = True
                 week_index = 0
