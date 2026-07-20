@@ -7,6 +7,12 @@ on:
     paths:
       - "engineering-knowledge-base/**"
       - ".github/workflows/sdcourse-first-five.yml"
+  pull_request:
+    branches:
+      - feature/system-design-academy-context-layer
+    paths:
+      - "engineering-knowledge-base/**"
+      - ".github/workflows/sdcourse-first-five.yml"
   workflow_dispatch:
 
 permissions:
