@@ -1,0 +1,129 @@
+from dataclasses import dataclass
+from urllib.parse import urlparse, urlunparse
+import re
+
+import requests
+from slugify import slugify
+
+from collectors.base import BaseCollector, KnowledgeDocument
+from collectors.web_collector import DEFAULT_HEADERS, WebCollector
+
+
+HEADING_RE = re.compile(r"^(#{2,6})\s+(.+?)\s*$")
+LINK_RE = re.compile(r"^-\s+\[([^\]]+)\]\((https?://[^)]+)\)")
+
+
+@dataclass(frozen=True)
+class CatalogEntry:
+    title: str
+    url: str
+    section: str
+    subsection: str
+    order: int
+
+
+class CatalogCollector(BaseCollector):
+    """Collect article links from a Markdown catalog and extract every target page."""
+
+    def __init__(self, session: requests.Session | None = None):
+        self.session = session or requests.Session()
+        self.session.headers.update(DEFAULT_HEADERS)
+        self.web_collector = WebCollector(self.session)
+
+    def collect(self, source: dict) -> list[KnowledgeDocument]:
+        entries = self.discover_entries(source)
+        max_articles = int(source.get("max_articles", len(entries)))
+        min_content_chars = int(source.get("min_content_chars", 500))
+        docs: list[KnowledgeDocument] = []
+
+        for entry in entries[:max_articles]:
+            tags = list(source.get("tags", []))
+            tags.extend(self._section_tags(entry.section, entry.subsection))
+            article_source = {
+                **source,
+                "document_type": "web",
+                "title": entry.title,
+                "tags": list(dict.fromkeys(tags)),
+                "document_metadata": {
+                    "catalog_name": source["name"],
+                    "catalog_url": source.get("catalog_page", source["url"]),
+                    "catalog_section": entry.section,
+                    "catalog_subsection": entry.subsection,
+                    "catalog_order": entry.order,
+                    "catalog_link_title": entry.title,
+                },
+            }
+            doc = self.web_collector.extract_url(entry.url, article_source)
+            if not doc or len(doc.content) < min_content_chars:
+                continue
+            doc.metadata["catalog_discovered_title"] = entry.title
+            docs.append(doc)
+        return docs
+
+    def discover_entries(self, source: dict) -> list[CatalogEntry]:
+        response = self.session.get(source["url"], timeout=30)
+        response.raise_for_status()
+        markdown = response.text
+        allow_domains = {domain.lower() for domain in source.get("allow_domains", [])}
+        include_sections = {section.lower() for section in source.get("include_sections", [])}
+
+        section = "Uncategorized"
+        subsection = "General"
+        entries: list[CatalogEntry] = []
+        seen_urls: set[str] = set()
+
+        for line in markdown.splitlines():
+            heading = HEADING_RE.match(line.strip())
+            if heading:
+                level = len(heading.group(1))
+                value = self._clean_heading(heading.group(2))
+                if level == 2:
+                    section = value
+                    subsection = "General"
+                elif level >= 3:
+                    subsection = value
+                continue
+
+            link = LINK_RE.match(line.strip())
+            if not link:
+                continue
+            title, raw_url = link.groups()
+            url = self._canonical_url(raw_url)
+            domain = urlparse(url).netloc.lower()
+            if allow_domains and domain not in allow_domains:
+                continue
+            if include_sections and section.lower() not in include_sections:
+                continue
+            if url in seen_urls:
+                continue
+            seen_urls.add(url)
+            entries.append(
+                CatalogEntry(
+                    title=title.strip(),
+                    url=url,
+                    section=section,
+                    subsection=subsection,
+                    order=len(entries) + 1,
+                )
+            )
+        return entries
+
+    @staticmethod
+    def _clean_heading(value: str) -> str:
+        return value.replace("\\#", "#").strip()
+
+    @staticmethod
+    def _canonical_url(url: str) -> str:
+        parsed = urlparse(url.strip())
+        scheme = "https" if parsed.scheme in {"http", "https"} else parsed.scheme
+        path = parsed.path.rstrip("/") or "/"
+        return urlunparse((scheme, parsed.netloc.lower(), path, "", "", ""))
+
+    @staticmethod
+    def _section_tags(section: str, subsection: str) -> list[str]:
+        tags = []
+        for value in (section, subsection):
+            slug = slugify(value)
+            if slug and slug not in {"general", "companies", "technologies", "interviews", "ai"}:
+                tags.append(slug)
+        return tags
