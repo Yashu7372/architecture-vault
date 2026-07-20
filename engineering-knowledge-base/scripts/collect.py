@@ -23,10 +23,12 @@ CONFIG_FILES = [ROOT / "config" / "sources.manual.yaml", ROOT / "config" / "sour
 OUTPUT_DIR = ROOT / "output"
 NOTES_DIR = OUTPUT_DIR / "notes"
 INDEX_DIR = OUTPUT_DIR / "indexes"
+REPORT_DIR = OUTPUT_DIR / "reports"
 MANIFEST_FILE = OUTPUT_DIR / "manifest.json"
 
 NOTES_DIR.mkdir(parents=True, exist_ok=True)
 INDEX_DIR.mkdir(parents=True, exist_ok=True)
+REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def get_collector(source_type: str):
@@ -170,6 +172,40 @@ def write_source_index(source_name: str, items: list[dict]):
     index_file.write_text("\n".join(lines), encoding="utf-8")
 
 
+def write_collection_report(source_name: str, report: dict) -> None:
+    stem = f"{slugify(source_name)}-collection"
+    json_path = REPORT_DIR / f"{stem}.json"
+    markdown_path = REPORT_DIR / f"{stem}.md"
+    json_path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    lines = [
+        f"# Collection Report: {source_name}",
+        "",
+        f"- Catalog: {report.get('catalog_url', '')}",
+        f"- Discovered: {report.get('discovered', 0)}",
+        f"- Skipped existing: {report.get('skipped_existing', 0)}",
+        f"- Attempted: {report.get('attempted', 0)}",
+        f"- Deferred by limit: {report.get('deferred_by_limit', 0)}",
+        f"- Collected: {report.get('collected', 0)}",
+        f"- Failed or too short: {report.get('failed', 0)}",
+        "",
+        "## Non-collected Articles",
+        "",
+    ]
+    failures = [result for result in report.get("results", []) if result.get("status") != "collected"]
+    if failures:
+        for result in failures:
+            lines.append(
+                f"- `{result.get('status', 'unknown')}` "
+                f"[{result.get('title', 'Untitled')}]({result.get('url', '')}) "
+                f"— {result.get('content_chars', 0)} characters"
+            )
+    else:
+        lines.append("No extraction failures in the attempted set.")
+    markdown_path.write_text("\n".join(lines), encoding="utf-8")
+    print(f"Collection report: {json_path} and {markdown_path}")
+
+
 def parse_args():
     parser = ArgumentParser(description="Collect engineering knowledge sources into normalized Markdown notes.")
     parser.add_argument("--source", action="append", help="Collect only the named source. Repeat for multiple sources.")
@@ -217,6 +253,10 @@ def main():
         except Exception as exc:
             print(f"Failed source {source['name']}: {exc}")
             docs = []
+
+        collection_report = getattr(collector, "last_report", None)
+        if collection_report:
+            write_collection_report(source["name"], collection_report)
 
         if not args.resume and docs:
             manifest_by_url = {
