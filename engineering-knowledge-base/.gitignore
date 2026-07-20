@@ -1,8 +1,18 @@
 .venv/
 __pycache__/
-*.pyc
+*.py[cod]
 .auth/
 .env
 input/private/
 input/internal/
 output/raw-private/
+
+# Generated ingestion and retrieval artifacts stay local.
+output/manifest.json
+output/MASTER_INDEX.md
+output/indexes/
+output/context/
+output/reports/
+output/notes/*
+!output/notes/starter/
+!output/notes/starter/**
