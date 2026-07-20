@@ -67,9 +67,33 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Verify daily outputs
+      - name: Verify curriculum and public boundaries
         run: |
-          test -f engineering-knowledge-base/output/daily-learning/sdcourse-python-js/day-001/01-public-source.md
-          test -f engineering-knowledge-base/output/daily-learning/sdcourse-python-js/day-001/02-completed-lesson.md
-          test -f engineering-knowledge-base/output/daily-learning/sdcourse-python-js/day-005/01-public-source.md
-          test -f engineering-knowledge-base/output/daily-learning/sdcourse-python-js/day-005/02-completed-lesson.md
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path("engineering-knowledge-base/output")
+          report = json.loads((root / "reports/sdcourse-python-js-collection.json").read_text())
+          assert report["discovered"] == 254
+          assert report["attempted"] == 5
+          assert report["collected"] == 5
+          assert report["failed"] == 0
+          assert len(report["curriculum"]) == 254
+
+          first = report["curriculum"][0]
+          assert first["day"] == 1
+          assert first["module"].startswith("Module 1:")
+          assert first["week"].startswith("Week 1:")
+
+          levels = [item["access_level"] for item in report["results"]]
+          assert levels == ["public", "public", "public", "preview", "preview"], levels
+
+          assert (root / "courses/sdcourse-python-js/CURRICULUM_CONTEXT.md").is_file()
+          assert (root / "courses/sdcourse-python-js/CURRICULUM_CONTEXT.json").is_file()
+          for day in range(1, 6):
+              folder = root / f"daily-learning/sdcourse-python-js/day-{day:03d}"
+              assert (folder / "01-public-source.md").is_file()
+              assert (folder / "02-completed-lesson.md").is_file()
+              assert (folder / "STATUS.json").is_file()
+          PY
