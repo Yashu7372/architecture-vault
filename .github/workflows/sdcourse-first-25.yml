@@ -15,7 +15,7 @@ permissions:
 jobs:
   build-first-25:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,6 +37,14 @@ jobs:
           python engineering-knowledge-base/scripts/run_daily_course_learning.py \
             --track python-js \
             --lessons-per-run 25
+
+      - name: Build master overview and image pack
+        shell: bash
+        run: |
+          python engineering-knowledge-base/scripts/build_first_25_review_pack.py \
+            --source sdcourse-python-js \
+            --days 25 \
+            --download-images
 
       - name: Verify outputs
         shell: bash
@@ -63,13 +71,26 @@ jobs:
               raise SystemExit(f"Expected 254 curriculum lessons, got {report.get('discovered')}")
           if report.get("collected") != 25:
               raise SystemExit(f"Expected 25 collected lessons, got {report.get('collected')}")
+
+          review = root / "course-overviews" / "sdcourse-python-js" / "first-25"
+          overview = review / "FIRST_25_OVERVIEW.md"
+          image_catalog = review / "PUBLIC_IMAGE_CATALOG.md"
+          review_index = review / "REVIEW_PACK_INDEX.md"
+          for path in (overview, image_catalog, review_index):
+              if not path.is_file():
+                  raise SystemExit(f"Missing review-pack file: {path}")
+          if overview.read_text(encoding="utf-8").count("### Day ") != 25:
+              raise SystemExit("Master overview does not contain all 25 day sections")
+
           print(json.dumps(report.get("access_counts", {}), indent=2))
+          print(f"Master overview: {overview}")
+          print(f"Image catalog: {image_catalog}")
           PY
 
       - name: Upload private review artifact
         uses: actions/upload-artifact@v4
         with:
-          name: sdcourse-first-25-lessons
+          name: sdcourse-first-25-review-pack
           path: engineering-knowledge-base/output
           if-no-files-found: error
           retention-days: 14
