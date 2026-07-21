@@ -21,7 +21,7 @@ permissions:
 jobs:
   build-first-five:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,17 +41,6 @@ jobs:
         run: |
           rm -rf engineering-knowledge-base/output
           mkdir -p engineering-knowledge-base/output/diagnostics
-          python - <<'PY'
-          from pathlib import Path
-          import requests
-          url = "https://r.jina.ai/https://sdcourse.substack.com/p/hands-on-distributed-systems-with"
-          response = requests.get(url, timeout=90, headers={"Accept": "text/plain"})
-          response.raise_for_status()
-          Path("engineering-knowledge-base/output/diagnostics/curriculum-reader.md").write_text(
-              response.text,
-              encoding="utf-8",
-          )
-          PY
           set -o pipefail
           python engineering-knowledge-base/scripts/run_daily_course_learning.py \
             --track python-js \
@@ -59,15 +48,10 @@ jobs:
             2>&1 | tee engineering-knowledge-base/output/diagnostics/first-five-run.log
 
       - name: List generated outputs
+        if: always()
         run: |
-          echo "Generated files:"
           find engineering-knowledge-base/output -maxdepth 5 -type f | sort || true
-          echo "Scheduler state:"
-          cat engineering-knowledge-base/output/scheduler/sdcourse-state.json || true
-          echo "Collection report:"
           cat engineering-knowledge-base/output/reports/sdcourse-python-js-collection.json || true
-          echo "Run diagnostics:"
-          cat engineering-knowledge-base/output/diagnostics/first-five-run.log || true
 
       - name: Upload first-five learning artifacts
         if: always()
@@ -97,14 +81,28 @@ jobs:
           assert first["module"].startswith("Module 1:")
           assert first["week"].startswith("Week 1:")
 
+          # Access can change when the publication makes an article public or
+          # preview-only. Verify the observed result is valid rather than
+          # hard-coding a historical classification.
+          allowed = {"public", "preview", "curriculum-only"}
           levels = [item["access_level"] for item in report["results"]]
-          assert levels == ["public", "public", "public", "preview", "preview"], levels
+          assert set(levels) <= allowed, levels
 
+          forbidden = (
+              "claim my free post",
+              "continue reading this post for free",
+              "subscriber implementation details",
+          )
           assert (root / "courses/sdcourse-python-js/CURRICULUM_CONTEXT.md").is_file()
           assert (root / "courses/sdcourse-python-js/CURRICULUM_CONTEXT.json").is_file()
           for day in range(1, 6):
               folder = root / f"daily-learning/sdcourse-python-js/day-{day:03d}"
-              assert (folder / "01-public-source.md").is_file()
-              assert (folder / "02-completed-lesson.md").is_file()
-              assert (folder / "STATUS.json").is_file()
+              source = folder / "01-public-source.md"
+              lesson = folder / "02-completed-lesson.md"
+              status = folder / "STATUS.json"
+              assert source.is_file()
+              assert lesson.is_file()
+              assert status.is_file()
+              lowered = source.read_text(encoding="utf-8").lower()
+              assert not any(marker in lowered for marker in forbidden), (day, lowered[-500:])
           PY

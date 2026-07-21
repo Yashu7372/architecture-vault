@@ -1,0 +1,117 @@
+name: SDCourse First 25 Lessons
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/sdcourse-first-25-lessons
+    paths:
+      - "engineering-knowledge-base/**"
+      - ".github/workflows/sdcourse-first-25.yml"
+  pull_request:
+    branches:
+      - feature/system-design-academy-context-layer
+    paths:
+      - "engineering-knowledge-base/**"
+      - ".github/workflows/sdcourse-first-25.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-first-25:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: engineering-knowledge-base/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r engineering-knowledge-base/requirements.txt
+
+      - name: Build first 25 lessons
+        shell: bash
+        run: |
+          rm -rf engineering-knowledge-base/output
+          mkdir -p engineering-knowledge-base/output/diagnostics
+          set -o pipefail
+          python engineering-knowledge-base/scripts/run_daily_course_learning.py \
+            --track python-js \
+            --lessons-per-run 25 \
+            2>&1 | tee engineering-knowledge-base/output/diagnostics/first-25-run.log
+
+      - name: Build master overview and image pack
+        shell: bash
+        run: |
+          python engineering-knowledge-base/scripts/build_first_25_review_pack.py \
+            --source sdcourse-python-js \
+            --days 25 \
+            --download-images \
+            2>&1 | tee engineering-knowledge-base/output/diagnostics/review-pack.log
+
+      - name: Print diagnostics
+        if: always()
+        shell: bash
+        run: |
+          find engineering-knowledge-base/output -maxdepth 6 -type f | sort || true
+          echo "Collection report:"
+          cat engineering-knowledge-base/output/reports/sdcourse-python-js-collection.json || true
+          echo "Review pack log:"
+          cat engineering-knowledge-base/output/diagnostics/review-pack.log || true
+
+      - name: Upload private review artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdcourse-first-25-review-pack
+          path: engineering-knowledge-base/output
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Verify outputs
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+
+          root = Path("engineering-knowledge-base/output")
+          daily = root / "daily-learning" / "sdcourse-python-js"
+          missing = []
+          for day in range(1, 26):
+              folder = daily / f"day-{day:03d}"
+              for filename in ("01-public-source.md", "02-completed-lesson.md", "STATUS.json"):
+                  if not (folder / filename).is_file():
+                      missing.append(str(folder / filename))
+          if missing:
+              raise SystemExit("Missing outputs:\n" + "\n".join(missing))
+
+          report = json.loads(
+              (root / "reports" / "sdcourse-python-js-collection.json").read_text()
+          )
+          if report.get("discovered") != 254:
+              raise SystemExit(f"Expected 254 curriculum lessons, got {report.get('discovered')}")
+          if report.get("collected") != 25:
+              raise SystemExit(f"Expected 25 collected lessons, got {report.get('collected')}")
+
+          review = root / "course-overviews" / "sdcourse-python-js" / "first-25"
+          overview = review / "FIRST_25_OVERVIEW.md"
+          image_catalog = review / "PUBLIC_IMAGE_CATALOG.md"
+          review_index = review / "REVIEW_PACK_INDEX.md"
+          for path in (overview, image_catalog, review_index):
+              if not path.is_file():
+                  raise SystemExit(f"Missing review-pack file: {path}")
+          if overview.read_text(encoding="utf-8").count("### Day ") != 25:
+              raise SystemExit("Master overview does not contain all 25 day sections")
+
+          print(json.dumps(report.get("access_counts", {}), indent=2))
+          print(f"Master overview: {overview}")
+          print(f"Image catalog: {image_catalog}")
+          PY
