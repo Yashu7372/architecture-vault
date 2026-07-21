@@ -45,7 +45,7 @@ Integrate All Components (Day 8 to Day 14) into a Distributed Logging Platform
         self.assertEqual("Week 2: Network-Based Log Collection", by_day[8].week)
         self.assertEqual("Build TCP server", by_day[8].title)
 
-    def test_later_day_reader_content_is_limited_to_public_intro(self):
+    def test_paywalled_reader_content_is_limited_to_public_intro(self):
         raw = """Title: Day 4
 Published Time: 2026-01-01
 Markdown Content:
@@ -55,15 +55,14 @@ Welcome to the lesson.
 
 The parser normalizes Apache, Nginx, and JSON records.
 
+Claim my free post
+
 **Source code repository: https://github.com/example/private-course**
 
 Implementation code that must not be retained.
 """
         collector = StrictPublicDailyCourseCollector()
-        collector._active_source = {
-            "verified_public_through_day": 3,
-            "reader_preview_max_chars": 7000,
-        }
+        collector._active_source = {"reader_preview_max_chars": 7000}
         snapshot = collector._article_from_reader_markdown(
             raw,
             "https://course.example/p/day-4-log-parser",
@@ -77,15 +76,15 @@ Implementation code that must not be retained.
         self.assertNotIn("Source code repository", snapshot.content)
         self.assertNotIn("Implementation code", snapshot.content)
 
-    def test_verified_free_day_overrides_signup_marker_after_public_body(self):
+    def test_signup_marker_is_not_overridden_by_early_day_number(self):
         raw = """Title: Day 2
 Markdown Content:
-A detailed public lesson explaining event generation, rate control, and validation.
+A detailed public introduction explaining event generation, rate control, and validation.
 
 Continue reading this post for free
 """
         collector = StrictPublicDailyCourseCollector()
-        collector._active_source = {"verified_public_through_day": 3}
+        collector._active_source = {"verified_public_through_day": 25}
         snapshot = collector._article_from_reader_markdown(
             raw,
             "https://course.example/p/day-2-log-generator",
@@ -93,8 +92,8 @@ Continue reading this post for free
             min_preview_chars=20,
         )
 
-        self.assertEqual("public", snapshot.access_level)
-        self.assertFalse(snapshot.explicit_paywall)
+        self.assertEqual("preview", snapshot.access_level)
+        self.assertTrue(snapshot.explicit_paywall)
         self.assertIn("rate control", snapshot.content)
         self.assertNotIn("Continue reading", snapshot.content)
 
