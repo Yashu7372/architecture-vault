@@ -1,18 +1,34 @@
 from __future__ import annotations
 
 import re
+from urllib.parse import urljoin
 
 from collectors.reader_backed_substack_course_collector import (
     DETAILED_CURRICULUM_MARKERS,
+    EXTRA_PAYWALL_MARKERS,
+    MARKDOWN_LINK_RE,
 )
-from collectors.substack_course_collector import ArticleSnapshot, CourseLesson, DAY_RE, OUTPUT_RE
+from collectors.substack_course_collector import (
+    ArticleSnapshot,
+    CourseLesson,
+    DAY_RE,
+    OUTPUT_RE,
+    PAYWALL_MARKERS,
+)
 from collectors.anonymous_reader_daily_course_collector import (
     AnonymousReaderDailyCourseCollector,
 )
 
 
 class StrictPublicDailyCourseCollector(AnonymousReaderDailyCourseCollector):
-    """Apply one public boundary regardless of direct or reader-backed transport."""
+    """Apply one conservative public boundary regardless of fetch transport.
+
+    A lesson is retained as a full public article only when the fetched article
+    itself has no paywall marker and contains enough material. Otherwise only
+    the public introductory preview is retained. This intentionally avoids
+    fixed day-number assumptions because Substack access can vary by article,
+    account, campaign, and time.
+    """
 
     def discover_lessons(self, source: dict):
         self._active_source = source
@@ -40,22 +56,90 @@ class StrictPublicDailyCourseCollector(AnonymousReaderDailyCourseCollector):
             min_public_chars=min_public_chars,
             min_preview_chars=min_preview_chars,
         )
-        if not article_url:
+        return self._respect_article_access(
+            snapshot,
+            min_public_chars=min_public_chars,
+            min_preview_chars=min_preview_chars,
+        )
+
+    def _article_from_reader_markdown(
+        self,
+        raw: str,
+        article_url: str,
+        *,
+        min_public_chars: int,
+        min_preview_chars: int,
+    ) -> ArticleSnapshot:
+        # Parse the anonymous reader response directly so classification is
+        # based on the article's real paywall markers, not on a fixed day range.
+        title_match = re.search(r"(?mi)^Title:\s*(.+)$", raw)
+        published_match = re.search(r"(?mi)^Published Time:\s*(.+)$", raw)
+        content = (
+            raw.split("Markdown Content:", 1)[1].strip()
+            if "Markdown Content:" in raw
+            else raw.strip()
+        )
+        lowered = content.lower()
+        explicit_paywall = any(
+            marker in lowered for marker in (*PAYWALL_MARKERS, *EXTRA_PAYWALL_MARKERS)
+        )
+        content = self._truncate_public_markdown(content)
+        links = tuple(
+            dict.fromkeys(
+                urljoin(article_url, href)
+                for _label, href in MARKDOWN_LINK_RE.findall(content)
+                if not href.startswith("#")
+            )
+        )
+        if len(content) < min_preview_chars:
+            snapshot = ArticleSnapshot(
+                title=title_match.group(1).strip() if title_match else None,
+                content="",
+                published_date=published_match.group(1).strip() if published_match else None,
+                links=tuple(),
+                access_level="curriculum-only",
+                explicit_paywall=explicit_paywall,
+            )
+        else:
+            snapshot = ArticleSnapshot(
+                title=title_match.group(1).strip() if title_match else None,
+                content=content,
+                published_date=published_match.group(1).strip() if published_match else None,
+                links=links,
+                access_level=(
+                    "preview"
+                    if explicit_paywall or len(content) < min_public_chars
+                    else "public"
+                ),
+                explicit_paywall=explicit_paywall,
+            )
+        return self._respect_article_access(
+            snapshot,
+            min_public_chars=min_public_chars,
+            min_preview_chars=min_preview_chars,
+        )
+
+    def _respect_article_access(
+        self,
+        snapshot: ArticleSnapshot,
+        *,
+        min_public_chars: int,
+        min_preview_chars: int,
+    ) -> ArticleSnapshot:
+        if not snapshot.content or snapshot.access_level == "curriculum-only":
             return snapshot
 
-        day = self._day_from_article_url(article_url)
-        verified_through = int(self._active_source.get("verified_public_through_day", 0))
-        if day is not None and day <= verified_through:
-            if len(snapshot.content) >= min_public_chars:
-                return ArticleSnapshot(
-                    title=snapshot.title,
-                    content=snapshot.content,
-                    published_date=snapshot.published_date,
-                    links=snapshot.links,
-                    access_level="public",
-                    explicit_paywall=False,
-                )
-            return snapshot
+        # Keep a complete article only when the fetched page itself did not
+        # announce a paywall and enough material was visible anonymously.
+        if not snapshot.explicit_paywall and len(snapshot.content) >= min_public_chars:
+            return ArticleSnapshot(
+                title=snapshot.title,
+                content=snapshot.content,
+                published_date=snapshot.published_date,
+                links=snapshot.links,
+                access_level="public",
+                explicit_paywall=False,
+            )
 
         preview = self._introductory_preview(snapshot.content)
         if len(preview) < min_preview_chars:
@@ -196,34 +280,3 @@ class StrictPublicDailyCourseCollector(AnonymousReaderDailyCourseCollector):
                 )
             )
         return repaired
-
-    def _article_from_reader_markdown(
-        self,
-        raw: str,
-        article_url: str,
-        *,
-        min_public_chars: int,
-        min_preview_chars: int,
-    ) -> ArticleSnapshot:
-        snapshot = super()._article_from_reader_markdown(
-            raw,
-            article_url,
-            min_public_chars=min_public_chars,
-            min_preview_chars=min_preview_chars,
-        )
-        day = self._day_from_article_url(article_url)
-        verified_through = int(self._active_source.get("verified_public_through_day", 0))
-        if (
-            day is not None
-            and day <= verified_through
-            and len(snapshot.content) >= min_public_chars
-        ):
-            return ArticleSnapshot(
-                title=snapshot.title,
-                content=snapshot.content,
-                published_date=snapshot.published_date,
-                links=snapshot.links,
-                access_level="public",
-                explicit_paywall=False,
-            )
-        return snapshot
