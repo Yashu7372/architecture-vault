@@ -40,9 +40,12 @@ jobs:
         shell: bash
         run: |
           rm -rf engineering-knowledge-base/output
+          mkdir -p engineering-knowledge-base/output/diagnostics
+          set -o pipefail
           python engineering-knowledge-base/scripts/run_daily_course_learning.py \
             --track python-js \
-            --lessons-per-run 25
+            --lessons-per-run 25 \
+            2>&1 | tee engineering-knowledge-base/output/diagnostics/first-25-run.log
 
       - name: Build master overview and image pack
         shell: bash
@@ -50,7 +53,27 @@ jobs:
           python engineering-knowledge-base/scripts/build_first_25_review_pack.py \
             --source sdcourse-python-js \
             --days 25 \
-            --download-images
+            --download-images \
+            2>&1 | tee engineering-knowledge-base/output/diagnostics/review-pack.log
+
+      - name: Print diagnostics
+        if: always()
+        shell: bash
+        run: |
+          find engineering-knowledge-base/output -maxdepth 6 -type f | sort || true
+          echo "Collection report:"
+          cat engineering-knowledge-base/output/reports/sdcourse-python-js-collection.json || true
+          echo "Review pack log:"
+          cat engineering-knowledge-base/output/diagnostics/review-pack.log || true
+
+      - name: Upload private review artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdcourse-first-25-review-pack
+          path: engineering-knowledge-base/output
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Verify outputs
         shell: bash
@@ -92,11 +115,3 @@ jobs:
           print(f"Master overview: {overview}")
           print(f"Image catalog: {image_catalog}")
           PY
-
-      - name: Upload private review artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sdcourse-first-25-review-pack
-          path: engineering-knowledge-base/output
-          if-no-files-found: error
-          retention-days: 14
