@@ -8,6 +8,12 @@ on:
     paths:
       - "engineering-knowledge-base/**"
       - ".github/workflows/sdcourse-first-25.yml"
+  pull_request:
+    branches:
+      - feature/system-design-academy-context-layer
+    paths:
+      - "engineering-knowledge-base/**"
+      - ".github/workflows/sdcourse-first-25.yml"
 
 permissions:
   contents: read
