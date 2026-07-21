@@ -36,7 +36,20 @@ jobs:
         run: python -m compileall -q engineering-knowledge-base
 
       - name: Run unit tests
-        run: >-
-          python -m unittest discover
-          -s engineering-knowledge-base/tests
-          -p "test_*.py"
+        shell: bash
+        run: |
+          mkdir -p engineering-knowledge-base/test-results
+          set -o pipefail
+          python -m unittest discover \
+            -s engineering-knowledge-base/tests \
+            -p "test_*.py" \
+            2>&1 | tee engineering-knowledge-base/test-results/unittest.log
+
+      - name: Upload unit-test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: engineering-knowledge-base-test-log
+          path: engineering-knowledge-base/test-results/unittest.log
+          if-no-files-found: error
+          retention-days: 7
