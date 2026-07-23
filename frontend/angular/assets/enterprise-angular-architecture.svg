@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="840" viewBox="0 0 1400 840" role="img" aria-labelledby="title desc">
+<title id="title">Enterprise Angular reference architecture</title><desc id="desc">A layered feature-oriented Angular architecture showing shell, platform services, lazy features, feature state, domain models, adapters, backend APIs, real-time transport, design system and observability.</desc>
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8fafc"/><stop offset="1" stop-color="#eef2ff"/></linearGradient><filter id="s"><feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity=".12"/></filter><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#475569"/></marker><style>.title{font:700 32px Inter,Segoe UI,Arial;fill:#0f172a}.sub{font:400 16px Inter,Segoe UI,Arial;fill:#475569}.lane{fill:#fff;stroke:#cbd5e1;stroke-width:2;rx:20;filter:url(#s)}.shell{fill:#eff6ff;stroke:#60a5fa}.feature{fill:#f5f3ff;stroke:#a78bfa}.domain{fill:#ecfdf5;stroke:#34d399}.adapter{fill:#fff7ed;stroke:#fb923c}.external{fill:#fef2f2;stroke:#f87171}.cross{fill:#f8fafc;stroke:#64748b}.h{font:700 18px Inter,Segoe UI,Arial;fill:#0f172a}.t{font:400 14px Inter,Segoe UI,Arial;fill:#334155}.small{font:600 13px Inter,Segoe UI,Arial;fill:#475569}.arr{stroke:#475569;stroke-width:2.4;fill:none;marker-end:url(#a)}.dash{stroke:#7c3aed;stroke-width:2.5;stroke-dasharray:8 6;fill:none;marker-end:url(#a)}</style></defs>
+<rect width="1400" height="840" rx="24" fill="url(#bg)"/><text x="55" y="58" class="title">Enterprise Angular Reference Architecture</text><text x="55" y="88" class="sub">Feature-oriented boundaries with explicit state ownership and infrastructure adapters</text>
+
+<rect x="60" y="130" width="1280" height="105" class="lane shell"/><text x="90" y="166" class="h">Application Shell + Core Platform</text><text x="90" y="198" class="t">bootstrap • authentication session • runtime configuration • router • global error handling • HTTP pipeline • feature flags</text>
+<rect x="1030" y="153" width="270" height="58" rx="12" fill="#dbeafe" stroke="#93c5fd"/><text x="1165" y="178" text-anchor="middle" class="h">Lazy Route Composition</text><text x="1165" y="199" text-anchor="middle" class="small">feature providers define lifetime</text>
+
+<rect x="60" y="280" width="390" height="360" class="lane feature"/><text x="255" y="318" text-anchor="middle" class="h">Orders Feature</text>
+<rect x="90" y="345" width="330" height="65" rx="12" fill="#ede9fe" stroke="#c4b5fd"/><text x="255" y="374" text-anchor="middle" class="h">Pages + Feature UI</text><text x="255" y="397" text-anchor="middle" class="small">list • detail • edit • feature components</text>
+<rect x="90" y="435" width="330" height="70" rx="12" fill="#ede9fe" stroke="#c4b5fd"/><text x="255" y="466" text-anchor="middle" class="h">Route-scoped Store / Facade</text><text x="255" y="491" text-anchor="middle" class="small">readonly state • commands • workflow status</text>
+<rect x="90" y="530" width="150" height="75" rx="12" fill="#d1fae5" stroke="#6ee7b7"/><text x="165" y="561" text-anchor="middle" class="h">Domain</text><text x="165" y="586" text-anchor="middle" class="small">models + policies</text>
+<rect x="270" y="530" width="150" height="75" rx="12" fill="#ffedd5" stroke="#fdba74"/><text x="345" y="561" text-anchor="middle" class="h">Data Access</text><text x="345" y="586" text-anchor="middle" class="small">repository adapters</text>
+<path d="M255 410V428" class="arr"/><path d="M210 505V523" class="arr"/><path d="M300 505V523" class="arr"/>
+
+<rect x="505" y="280" width="390" height="360" class="lane feature"/><text x="700" y="318" text-anchor="middle" class="h">Reports Feature</text>
+<rect x="535" y="345" width="330" height="65" rx="12" fill="#ede9fe" stroke="#c4b5fd"/><text x="700" y="374" text-anchor="middle" class="h">Pages + Feature UI</text><text x="700" y="397" text-anchor="middle" class="small">filters • viewer • export • history</text>
+<rect x="535" y="435" width="330" height="70" rx="12" fill="#ede9fe" stroke="#c4b5fd"/><text x="700" y="466" text-anchor="middle" class="h">Route-scoped Store / Facade</text><text x="700" y="491" text-anchor="middle" class="small">URL state • loading • cache • commands</text>
+<rect x="535" y="530" width="150" height="75" rx="12" fill="#d1fae5" stroke="#6ee7b7"/><text x="610" y="561" text-anchor="middle" class="h">Domain</text><text x="610" y="586" text-anchor="middle" class="small">report concepts</text>
+<rect x="715" y="530" width="150" height="75" rx="12" fill="#ffedd5" stroke="#fdba74"/><text x="790" y="561" text-anchor="middle" class="h">Data Access</text><text x="790" y="586" text-anchor="middle" class="small">API + download</text>
+<path d="M700 410V428" class="arr"/><path d="M655 505V523" class="arr"/><path d="M745 505V523" class="arr"/>
+
+<rect x="950" y="280" width="390" height="360" class="lane adapter"/><text x="1145" y="318" text-anchor="middle" class="h">Shared Integration Boundaries</text>
+<rect x="985" y="350" width="320" height="70" rx="12" fill="#ffedd5" stroke="#fdba74"/><text x="1145" y="380" text-anchor="middle" class="h">HTTP / Generated Client Adapter</text><text x="1145" y="404" text-anchor="middle" class="small">DTO validation • mapping • error translation</text>
+<rect x="985" y="450" width="320" height="70" rx="12" fill="#ffedd5" stroke="#fdba74"/><text x="1145" y="480" text-anchor="middle" class="h">Real-time Adapter</text><text x="1145" y="504" text-anchor="middle" class="small">snapshot + delta • cursor • reconnect • dedupe</text>
+<rect x="985" y="550" width="145" height="55" rx="12" fill="#f1f5f9" stroke="#94a3b8"/><text x="1058" y="583" text-anchor="middle" class="h">API</text>
+<rect x="1160" y="550" width="145" height="55" rx="12" fill="#f1f5f9" stroke="#94a3b8"/><text x="1233" y="583" text-anchor="middle" class="h">SSE / WS</text>
+<path d="M1145 420V443" class="arr"/><path d="M1095 520V543" class="arr"/><path d="M1195 520V543" class="arr"/>
+
+<path d="M420 567H935" class="arr"/><path d="M865 567H935" class="arr"/>
+<path d="M1165 235V273" class="dash"/><path d="M255 235V273" class="dash"/><path d="M700 235V273" class="dash"/>
+
+<rect x="60" y="690" width="1280" height="105" class="lane cross"/><text x="90" y="726" class="h">Cross-cutting, business-neutral capabilities</text><text x="90" y="757" class="t">design system + accessibility • observability + correlation • testing builders/harnesses • architecture rules • CI/CD • security policy</text><text x="90" y="783" class="small">These support features; they must not become a dumping ground for feature-specific business logic.</text>
+<path d="M255 640V683" class="dash"/><path d="M700 640V683" class="dash"/><path d="M1145 640V683" class="dash"/>
+</svg>
