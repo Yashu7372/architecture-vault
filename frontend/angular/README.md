@@ -4,6 +4,12 @@ A structured path from browser and language fundamentals to production Angular a
 
 > Baseline: Angular v22-era APIs and practices, verified against official documentation in July 2026. Stable web, JavaScript, TypeScript, architecture, and design principles are separated from version-specific Angular behavior.
 
+## Visual overview
+
+![Enterprise Angular reference architecture](assets/enterprise-angular-architecture.svg)
+
+Open the complete [Angular visual engineering guide](15-visual-guide.md) for browser rendering, the JavaScript event loop, Angular compilation, dependency injection, signals, RxJS concurrency, enterprise architecture, and testing diagrams.
+
 ## How to use this vault
 
 1. Follow the roadmap in order when learning from scratch.
@@ -11,6 +17,7 @@ A structured path from browser and language fundamentals to production Angular a
 3. Build the projects instead of only reading.
 4. Use the interview file after completing the corresponding technical section.
 5. Revisit framework internals whenever an Angular API feels magical.
+6. Use the visual guide when you need a fast mental model before reading details.
 
 ## Curriculum
 
@@ -31,6 +38,7 @@ A structured path from browser and language fundamentals to production Angular a
 | 12 | [Hands-on projects](12-projects.md) | Progressive real-world implementation practice |
 | 13 | [Interview preparation](13-interview-preparation.md) | Questions, scenarios, coding exercises, system design |
 | 14 | [Cheat sheets and official references](14-cheatsheets-references.md) | Fast revision and primary documentation |
+| 15 | [Visual engineering guide](15-visual-guide.md) | Editable diagrams for core runtime and architecture concepts |
 
 ## Competency model
 
