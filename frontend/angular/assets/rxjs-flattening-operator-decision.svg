@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+<title id="title">RxJS flattening operator decision guide</title><desc id="desc">A decision tree for choosing switchMap, concatMap, exhaustMap or mergeMap based on cancellation, ordering, duplicate suppression and safe concurrency.</desc>
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8fafc"/><stop offset="1" stop-color="#fff7ed"/></linearGradient><filter id="s"><feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity=".12"/></filter><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#475569"/></marker><style>.title{font:700 30px Inter,Segoe UI,Arial;fill:#0f172a}.sub{font:400 16px Inter,Segoe UI,Arial;fill:#475569}.q{fill:#fff;stroke:#cbd5e1;stroke-width:2;filter:url(#s)}.op{stroke-width:2;rx:18;filter:url(#s)}.switch{fill:#eff6ff;stroke:#60a5fa}.concat{fill:#f5f3ff;stroke:#a78bfa}.exhaust{fill:#fff7ed;stroke:#fb923c}.merge{fill:#ecfdf5;stroke:#34d399}.h{font:700 18px Inter,Segoe UI,Arial;fill:#0f172a}.t{font:400 14px Inter,Segoe UI,Arial;fill:#334155}.tag{font:700 14px Inter,Segoe UI,Arial;fill:#475569}.arr{stroke:#475569;stroke-width:2.5;fill:none;marker-end:url(#a)}</style></defs>
+<rect width="1200" height="760" rx="24" fill="url(#bg)"/><text x="55" y="58" class="title">Choosing an RxJS Flattening Operator</text><text x="55" y="87" class="sub">Operator selection is a concurrency policy, not a syntax preference</text>
+
+<path d="M600 130 L755 215 L600 300 L445 215 Z" class="q"/><text x="600" y="202" text-anchor="middle" class="h">Should a new trigger cancel</text><text x="600" y="227" text-anchor="middle" class="h">the previous inner operation?</text>
+<rect x="875" y="160" width="250" height="120" class="op switch"/><text x="1000" y="197" text-anchor="middle" class="h">switchMap</text><text x="1000" y="228" text-anchor="middle" class="t">latest request wins</text><text x="1000" y="253" text-anchor="middle" class="t">search, route-driven loading</text>
+<path d="M755 215H868" class="arr"/><text x="810" y="198" text-anchor="middle" class="tag">YES</text>
+
+<path d="M600 340 L755 425 L600 510 L445 425 Z" class="q"/><text x="600" y="412" text-anchor="middle" class="h">Must every operation run</text><text x="600" y="437" text-anchor="middle" class="h">in strict source order?</text>
+<path d="M600 300V333" class="arr"/><text x="620" y="324" class="tag">NO</text>
+<rect x="875" y="365" width="250" height="120" class="op concat"/><text x="1000" y="402" text-anchor="middle" class="h">concatMap</text><text x="1000" y="433" text-anchor="middle" class="t">queue one after another</text><text x="1000" y="458" text-anchor="middle" class="t">ordered writes, sequential steps</text>
+<path d="M755 425H868" class="arr"/><text x="810" y="408" text-anchor="middle" class="tag">YES</text>
+
+<path d="M600 550 L755 635 L600 720 L445 635 Z" class="q"/><text x="600" y="622" text-anchor="middle" class="h">Should new triggers be ignored</text><text x="600" y="647" text-anchor="middle" class="h">while one operation is active?</text>
+<path d="M600 510V543" class="arr"/><text x="620" y="534" class="tag">NO</text>
+<rect x="75" y="575" width="275" height="120" class="op exhaust"/><text x="213" y="612" text-anchor="middle" class="h">exhaustMap</text><text x="213" y="643" text-anchor="middle" class="t">first trigger wins until complete</text><text x="213" y="668" text-anchor="middle" class="t">login, submit, duplicate protection</text>
+<path d="M445 635H357" class="arr"/><text x="402" y="618" text-anchor="middle" class="tag">YES</text>
+<rect x="875" y="575" width="250" height="120" class="op merge"/><text x="1000" y="612" text-anchor="middle" class="h">mergeMap</text><text x="1000" y="643" text-anchor="middle" class="t">run concurrently</text><text x="1000" y="668" text-anchor="middle" class="t">independent work; bound concurrency</text>
+<path d="M755 635H868" class="arr"/><text x="810" y="618" text-anchor="middle" class="tag">NO</text>
+
+<rect x="75" y="155" width="270" height="335" rx="18" fill="#fff" stroke="#cbd5e1" stroke-width="2" filter="url(#s)"/>
+<text x="210" y="195" text-anchor="middle" class="h">Before choosing</text>
+<text x="105" y="235" class="t">1. Is cancellation supported?</text><text x="105" y="270" class="t">2. Are writes idempotent?</text><text x="105" y="305" class="t">3. Must ordering be preserved?</text><text x="105" y="340" class="t">4. Can parallel work overload API?</text><text x="105" y="375" class="t">5. What happens on error?</text><text x="105" y="410" class="t">6. Should future triggers survive?</text><text x="105" y="455" class="tag">Also define retry, timeout,</text><text x="105" y="478" class="tag">cleanup, and user feedback.</text>
+</svg>
