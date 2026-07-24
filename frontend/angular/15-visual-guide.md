@@ -1,6 +1,6 @@
 # Angular Visual Engineering Guide
 
-This guide connects the most important runtime and architecture diagrams to the detailed chapters. The SVG sources are stored under [`assets/`](assets/) and can be edited directly without proprietary design tools.
+This guide connects the most important runtime, security, performance, and architecture visuals to the detailed chapters. The SVG sources are stored under [`assets/`](assets/) and can be edited directly without proprietary design tools.
 
 ## 1. Browser navigation and rendering
 
@@ -50,7 +50,7 @@ Choose a flattening operator by defining cancellation, ordering, concurrency, an
 
 Detailed chapter: [RxJS, signals, and state management](07-reactivity-and-state.md#5-essential-operators)
 
-## 7. Enterprise Angular architecture
+## 7. Enterprise Angular reference architecture
 
 ![Enterprise Angular reference architecture](assets/enterprise-angular-architecture.svg)
 
@@ -66,9 +66,34 @@ Most behavior should be proven with fast unit and component tests. Integration, 
 
 Detailed chapter: [Testing and engineering quality](09-testing-quality.md#1-test-levels)
 
+## 9. Twelve Angular performance techniques
+
+![Twelve Angular performance optimization techniques](assets/angular-performance-12-techniques.svg)
+
+This infographic summarizes measurement, OnPush, signals, stable list tracking, route splitting, `@defer`, virtualization, RxJS rate control, image optimization, SSR/hydration, bundle budgets, and state colocation.
+
+Detailed chapter: [Angular performance optimization](16-angular-performance-optimization.md)
+
+## 10. Enterprise authentication, SSO, and BFF
+
+![Enterprise Angular authentication using SSO and a Backend for Frontend](assets/angular-sso-bff-authentication.svg)
+
+The browser maintains a secure application session while the BFF acts as the confidential OIDC client, stores tokens server-side, validates CSRF, mediates approved API calls, and keeps authorization enforcement on trusted servers.
+
+Detailed chapter: [Enterprise authentication, SSO, and BFF](17-authentication-sso-bff.md)
+
+## 11. Twelve enterprise implementation patterns
+
+![Twelve enterprise Angular implementation patterns](assets/angular-enterprise-12-patterns.svg)
+
+This infographic covers feature boundaries, route-scoped providers, facades, ports and adapters, BFF, typed transport boundaries, state ownership, snapshot-plus-delta real-time integration, stable errors, runtime configuration, observability, and automated architecture rules.
+
+Detailed chapter: [Enterprise Angular implementation patterns](18-enterprise-implementation-patterns.md)
+
 ## Diagram usage rules
 
-- Keep diagrams focused on one mental model.
+- Keep diagrams focused on one mental model or one compact implementation checklist.
+- Use infographic cards when the topic is a collection of directly actionable techniques.
 - Prefer stable engineering concepts over screenshots tied to a temporary UI version.
 - Store editable SVG in the repository.
 - Include an SVG `title`, `desc`, and meaningful Markdown alternative text.
