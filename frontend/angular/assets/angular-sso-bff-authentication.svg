@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
+  <title id="title">Enterprise Angular authentication with SSO and Backend for Frontend</title>
+  <desc id="desc">An infographic showing an Angular browser application using same-origin secure cookies with a BFF. The BFF acts as the OpenID Connect confidential client, stores access and refresh tokens server-side, and calls protected APIs. It also summarizes session, CSRF, authorization, refresh, logout, observability, and security controls.</desc>
+  <defs>
+    <style>
+      .bg{fill:#f7f9fc}.panel{fill:#fff;stroke:#d9e2ef;stroke-width:2}.title{font:700 50px Arial,sans-serif;fill:#12213a}.sub{font:400 23px Arial,sans-serif;fill:#50627a}.h{font:700 24px Arial,sans-serif;fill:#15233a}.b{font:400 18px Arial,sans-serif;fill:#53647b}.small{font:400 15px Arial,sans-serif;fill:#617188}.strong{font:700 17px Arial,sans-serif;fill:#203653}.green{font:700 16px Arial,sans-serif;fill:#18735f}.num{fill:#1769e0}.numt{font:700 19px Arial,sans-serif;fill:#fff}.arrow{stroke:#1769e0;stroke-width:4;fill:none;marker-end:url(#arrow)}.dash{stroke:#8ba0b8;stroke-width:3;fill:none;stroke-dasharray:9 8;marker-end:url(#arrow2)}.chip{fill:#ffe98a}.chipt{font:700 15px Arial,sans-serif;fill:#5d4a00}
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#1769e0"/></marker>
+    <marker id="arrow2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#8ba0b8"/></marker>
+  </defs>
+  <rect class="bg" width="1600" height="1120" rx="28"/>
+  <circle cx="80" cy="76" r="39" fill="#e8f1ff" stroke="#1769e0" stroke-width="3"/>
+  <rect x="60" y="69" width="40" height="31" rx="6" fill="none" stroke="#1769e0" stroke-width="4"/>
+  <path d="M69 69V58a11 11 0 0 1 22 0v11" fill="none" stroke="#1769e0" stroke-width="4"/>
+  <text x="140" y="72" class="title">Enterprise Angular Authentication: SSO + BFF</text>
+  <text x="143" y="110" class="sub">Keep OAuth tokens out of browser JavaScript; use a same-origin session and server-side token handling.</text>
+
+  <!-- architecture lane -->
+  <rect x="50" y="145" width="1500" height="405" rx="24" class="panel"/>
+  <rect x="78" y="180" width="270" height="315" rx="22" fill="#eef5ff" stroke="#1769e0" stroke-width="3"/>
+  <text x="213" y="222" text-anchor="middle" class="h">Angular browser app</text>
+  <rect x="105" y="250" width="216" height="52" rx="12" fill="#fff" stroke="#b8c8da" stroke-width="2"/><text x="213" y="282" text-anchor="middle" class="strong">Session bootstrap</text>
+  <rect x="105" y="317" width="216" height="52" rx="12" fill="#fff" stroke="#b8c8da" stroke-width="2"/><text x="213" y="349" text-anchor="middle" class="strong">Route + permission UX</text>
+  <rect x="105" y="384" width="216" height="52" rx="12" fill="#fff" stroke="#b8c8da" stroke-width="2"/><text x="213" y="416" text-anchor="middle" class="strong">HttpClient to /bff/*</text>
+  <text x="213" y="470" text-anchor="middle" class="green">No access/refresh token storage</text>
+
+  <rect x="470" y="180" width="370" height="315" rx="22" fill="#edf9f4" stroke="#1f806d" stroke-width="3"/>
+  <text x="655" y="222" text-anchor="middle" class="h">Backend for Frontend</text>
+  <rect x="500" y="250" width="310" height="48" rx="12" fill="#fff" stroke="#b8c8da" stroke-width="2"/><text x="655" y="280" text-anchor="middle" class="strong">OIDC confidential client + PKCE</text>
+  <rect x="500" y="311" width="310" height="48" rx="12" fill="#fff" stroke="#b8c8da" stroke-width="2"/><text x="655" y="341" text-anchor="middle" class="strong">Server-side token/session vault</text>
+  <rect x="500" y="372" width="310" height="48" rx="12" fill="#fff" stroke="#b8c8da" stroke-width="2"/><text x="655" y="402" text-anchor="middle" class="strong">CSRF + policy + API allowlist</text>
+  <rect x="500" y="433" width="310" height="38" rx="10" class="chip"/><text x="655" y="458" text-anchor="middle" class="chipt">HttpOnly • Secure • SameSite session cookie</text>
+
+  <rect x="965" y="180" width="260" height="315" rx="22" fill="#fff8dc" stroke="#bc8b00" stroke-width="3"/>
+  <text x="1095" y="222" text-anchor="middle" class="h">Identity Provider</text>
+  <circle cx="1095" cy="294" r="45" fill="#ffe98a" stroke="#bc8b00" stroke-width="3"/>
+  <circle cx="1095" cy="278" r="13" fill="#8a6a00"/>
+  <path d="M1067 320c8-29 48-29 56 0" fill="#8a6a00"/>
+  <text x="1095" y="365" text-anchor="middle" class="strong">Entra ID / Keycloak / Okta</text>
+  <text x="1095" y="395" text-anchor="middle" class="b">MFA • federation • claims</text>
+  <text x="1095" y="425" text-anchor="middle" class="b">Authorization Code flow</text>
+  <text x="1095" y="455" text-anchor="middle" class="green">Enterprise SSO authority</text>
+
+  <rect x="1325" y="180" width="195" height="315" rx="22" fill="#f4efff" stroke="#7b55c7" stroke-width="3"/>
+  <text x="1423" y="222" text-anchor="middle" class="h">APIs</text>
+  <rect x="1350" y="255" width="145" height="50" rx="12" fill="#fff" stroke="#a996d1" stroke-width="2"/><text x="1423" y="286" text-anchor="middle" class="strong">Orders</text>
+  <rect x="1350" y="322" width="145" height="50" rx="12" fill="#fff" stroke="#a996d1" stroke-width="2"/><text x="1423" y="353" text-anchor="middle" class="strong">Reports</text>
+  <rect x="1350" y="389" width="145" height="50" rx="12" fill="#fff" stroke="#a996d1" stroke-width="2"/><text x="1423" y="420" text-anchor="middle" class="strong">Admin</text>
+  <text x="1423" y="466" text-anchor="middle" class="green">Server authorization</text>
+
+  <path d="M348 282H470" class="arrow"/><text x="408" y="266" text-anchor="middle" class="small">same origin</text>
+  <path d="M840 286H965" class="dash"/><text x="902" y="267" text-anchor="middle" class="small">login redirect</text>
+  <path d="M965 405H840" class="dash"/><text x="902" y="430" text-anchor="middle" class="small">code callback</text>
+  <path d="M840 360C1010 525 1180 525 1325 360" class="arrow"/><text x="1085" y="512" text-anchor="middle" class="small">BFF attaches access token server-side</text>
+  <path d="M470 440H348" class="arrow"/><text x="408" y="464" text-anchor="middle" class="small">session/profile response</text>
+
+  <!-- controls cards -->
+  <text x="50" y="602" class="h">10 production controls</text>
+  <g transform="translate(50 625)"><rect class="panel" width="285" height="175" rx="18"/><rect class="num" x="18" y="18" width="38" height="36" rx="8"/><text class="numt" x="37" y="43" text-anchor="middle">1</text><text class="strong" x="70" y="42">Session bootstrap</text><text class="b" x="20" y="82">GET /bff/session returns</text><text class="b" x="20" y="108">identity, tenant, permissions</text><text class="b" x="20" y="134">and expiry metadata.</text><text class="green" x="20" y="160">Fail closed, not anonymous-by-error.</text></g>
+  <g transform="translate(353 625)"><rect class="panel" width="285" height="175" rx="18"/><rect class="num" x="18" y="18" width="38" height="36" rx="8"/><text class="numt" x="37" y="43" text-anchor="middle">2</text><text class="strong" x="70" y="42">Cookie hardening</text><text class="b" x="20" y="82">Secure + HttpOnly + scoped</text><text class="b" x="20" y="108">Path/Domain + intentional</text><text class="b" x="20" y="134">SameSite policy.</text><text class="green" x="20" y="160">Rotate session ID after login.</text></g>
+  <g transform="translate(656 625)"><rect class="panel" width="285" height="175" rx="18"/><rect class="num" x="18" y="18" width="38" height="36" rx="8"/><text class="numt" x="37" y="43" text-anchor="middle">3</text><text class="strong" x="70" y="42">CSRF defence</text><text class="b" x="20" y="82">Validate anti-CSRF token on</text><text class="b" x="20" y="108">state-changing same-origin</text><text class="b" x="20" y="134">requests.</text><text class="green" x="20" y="160">Angular client + server validation.</text></g>
+  <g transform="translate(959 625)"><rect class="panel" width="285" height="175" rx="18"/><rect class="num" x="18" y="18" width="38" height="36" rx="8"/><text class="numt" x="37" y="43" text-anchor="middle">4</text><text class="strong" x="70" y="42">Server authorization</text><text class="b" x="20" y="82">Guards hide routes for UX;</text><text class="b" x="20" y="108">BFF and APIs enforce scopes,</text><text class="b" x="20" y="134">roles and resource policies.</text><text class="green" x="20" y="160">Never trust browser decisions.</text></g>
+  <g transform="translate(1262 625)"><rect class="panel" width="288" height="175" rx="18"/><rect class="num" x="18" y="18" width="38" height="36" rx="8"/><text class="numt" x="37" y="43" text-anchor="middle">5</text><text class="strong" x="70" y="42">Token lifecycle</text><text class="b" x="20" y="82">Refresh server-side with</text><text class="b" x="20" y="108">single-flight locking and</text><text class="b" x="20" y="134">rotation/revocation handling.</text><text class="green" x="20" y="160">No refresh token in JavaScript.</text></g>
+
+  <g transform="translate(50 820)"><rect class="panel" width="285" height="175" rx="18"/><rect class="num" x="18" y="18" width="38" height="36" rx="8"/><text class="numt" x="37" y="43" text-anchor="middle">6</text><text class="strong" x="70" y="42">API allowlist</text><text class="b" x="20" y="82">Map BFF routes to explicit</text><text class="b" x="20" y="108">hosts, paths and methods.</text><text class="b" x="20" y="134">Reject arbitrary proxy targets.</text><text class="green" x="20" y="160">Prevents token exfiltration/SSRF.</text></g>
+  <g transform="translate(353 820)"><rect class="panel" width="285" height="175" rx="18"/><rect class="num" x="18" y="18" width="38" height="36" rx="8"/><text class="numt" x="37" y="43" text-anchor="middle">7</text><text class="strong" x="70" y="42">401 coordination</text><text class="b" x="20" y="82">One refresh/session check,</text><text class="b" x="20" y="108">queue safe retries, redirect</text><text class="b" x="20" y="134">only after definitive expiry.</text><text class="green" x="20" y="160">Avoid login and retry storms.</text></g>
+  <g transform="translate(656 820)"><rect class="panel" width="285" height="175" rx="18"/><rect class="num" x="18" y="18" width="38" height="36" rx="8"/><text class="numt" x="37" y="43" text-anchor="middle">8</text><text class="strong" x="70" y="42">Logout completeness</text><text class="b" x="20" y="82">Destroy local session, revoke</text><text class="b" x="20" y="108">tokens where supported and</text><text class="b" x="20" y="134">perform IdP logout policy.</text><text class="green" x="20" y="160">Clear cached user data.</text></g>
+  <g transform="translate(959 820)"><rect class="panel" width="285" height="175" rx="18"/><rect class="num" x="18" y="18" width="38" height="36" rx="8"/><text class="numt" x="37" y="43" text-anchor="middle">9</text><text class="strong" x="70" y="42">Browser security</text><text class="b" x="20" y="82">CSP, Trusted Types, AOT,</text><text class="b" x="20" y="108">safe DOM APIs and no token/</text><text class="b" x="20" y="134">PII logging.</text><text class="green" x="20" y="160">Reduce XSS impact and leakage.</text></g>
+  <g transform="translate(1262 820)"><rect class="panel" width="288" height="175" rx="18"/><rect class="num" x="18" y="18" width="38" height="36" rx="8"/><text class="numt" x="37" y="43" text-anchor="middle">10</text><text class="strong" x="70" y="42">Observability</text><text class="b" x="20" y="82">Correlate login, session, API</text><text class="b" x="20" y="108">and authorization failures</text><text class="b" x="20" y="134">without logging secrets.</text><text class="green" x="20" y="160">Alert on loops and anomalies.</text></g>
+
+  <rect x="50" y="1028" width="1500" height="58" rx="15" fill="#e8f1ff"/>
+  <text x="800" y="1064" text-anchor="middle" class="h">Recommended for sensitive business applications: Angular holds UI/session state; the BFF owns OAuth tokens and API mediation.</text>
+</svg>
