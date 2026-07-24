@@ -49,6 +49,21 @@ sources:
       - agentic-rag
       - production-ai
 
+  - name: system-design-one-twitter-timeline
+    type: substack
+    url: https://substack.com/@systemdesignone/note/c-300843367
+    follow_linked_articles: true
+    max_items: 19
+    headless: false
+    login_required: true
+    auth_profile: substack
+    storage_state_file: engineering-knowledge-base/.auth/substack.json
+    tags:
+      - system-design
+      - architecture
+      - distributed-systems
+      - twitter-timeline
+
   - name: arxiv-agentic-rag
     type: arxiv
     query: agentic RAG multi-agent LLM production architecture
