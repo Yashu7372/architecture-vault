@@ -10,7 +10,10 @@ from collectors.base import BaseCollector, KnowledgeDocument
 
 class WebCollector(BaseCollector):
     def collect(self, source: dict) -> list[KnowledgeDocument]:
-        article_urls = self._discover_article_urls(source["url"])
+        # exact mode is intended for inbox links explicitly selected by the user.
+        # discover mode keeps the original behaviour for engineering blogs/sites.
+        mode = source.get("mode", "discover")
+        article_urls = [source["url"]] if mode == "exact" else self._discover_article_urls(source["url"])
         docs: list[KnowledgeDocument] = []
         for article_url in article_urls[:50]:
             doc = self._extract_article(article_url, source)
@@ -46,7 +49,9 @@ class WebCollector(BaseCollector):
 
     def _extract_article(self, article_url: str, source: dict) -> KnowledgeDocument | None:
         try:
-            html = requests.get(article_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=30).text
+            response = requests.get(article_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=30)
+            response.raise_for_status()
+            html = response.text
             readable = Document(html)
             title = readable.short_title() or article_url
             content = md(readable.summary(), heading_style="ATX").strip()
