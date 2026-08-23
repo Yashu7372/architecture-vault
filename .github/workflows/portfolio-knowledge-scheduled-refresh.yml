@@ -46,22 +46,33 @@ jobs:
           restore-keys: |
             portfolio-knowledge-${{ runner.os }}-
 
-      - name: Refresh bounded public sources
+      - name: Refresh bounded public research sources
         run: >-
           python engineering-knowledge-base/scripts/run_portfolio_knowledge_pipeline.py
           --group scheduled-public
           --resume
           --max-articles 20
+          --skip-context
 
-      - name: Verify generated context
+      - name: Advance Substack learning one lesson per track
+        run: >-
+          python engineering-knowledge-base/scripts/run_daily_course_learning.py
+          --track all
+          --lessons-per-run 1
+          --rebuild-context
+
+      - name: Verify generated context and scheduler state
         run: |
           test -f engineering-knowledge-base/output/manifest.json
           test -f engineering-knowledge-base/output/MASTER_INDEX.md
           test -f engineering-knowledge-base/output/context/context.sqlite
           test -f engineering-knowledge-base/output/context/chunks.jsonl
           test -f engineering-knowledge-base/output/context/graph.json
+          test -f engineering-knowledge-base/output/scheduler/sdcourse-state.json
 
 # GitHub cron workflows only execute from the repository default branch.
 # This file intentionally lives on main but checks out the fixed canonical
 # feature branch above. The knowledge implementation and source registry remain
 # owned by feature/portfolio-knowledge-source-of-truth.
+# Raw captures are never committed; scheduled state/output persists only through
+# the Actions cache so the day-wise Substack learning scheduler can resume.
