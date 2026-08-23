@@ -56,14 +56,16 @@ class PortfolioSourceOfTruthTests(unittest.TestCase):
                 self.assertEqual(len(sources), len(set(sources)))
                 self.assertEqual([], sorted(set(sources) - names))
 
-    def test_scheduled_group_is_public_only(self):
+    def test_scheduled_research_and_daily_learning_are_separated(self):
         data = yaml.safe_load(
             (ROOT / "config" / "source-groups.yaml").read_text(encoding="utf-8")
         ) or {}
         scheduled = set(data["groups"]["scheduled-public"]["sources"])
+        daily = set(data["groups"]["daily-learning"]["sources"])
         self.assertNotIn("ai-agent-mastery-substack", scheduled)
-        self.assertIn("sdcourse-python-js", scheduled)
-        self.assertIn("sdcourse-java-spring", scheduled)
+        self.assertNotIn("sdcourse-python-js", scheduled)
+        self.assertNotIn("sdcourse-java-spring", scheduled)
+        self.assertEqual({"sdcourse-python-js", "sdcourse-java-spring"}, daily)
 
     def test_canonical_group_connects_research_learning_and_portfolio(self):
         data = yaml.safe_load(
