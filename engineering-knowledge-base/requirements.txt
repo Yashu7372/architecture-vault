@@ -8,3 +8,4 @@ lxml
 pypdf
 playwright
 feedparser
+youtube-transcript-api
