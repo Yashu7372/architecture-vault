@@ -31,20 +31,18 @@ groups:
       - portfolio-enterprise-architecture-graph
 
   daily-learning:
-    description: Public-course curricula and safely accessible lesson material.
+    description: Public-course curricula and safely accessible lesson material. Use run_daily_course_learning.py for scheduled progression so learning artifacts and scheduler state stay consistent.
     sources:
       - sdcourse-python-js
       - sdcourse-java-spring
 
   scheduled-public:
-    description: Bounded public sources safe for unattended scheduled refreshes.
+    description: Bounded non-course public sources safe for unattended scheduled refreshes. Course progression is executed separately by the dedicated daily-learning scheduler.
     sources:
       - openclaw
       - karpathy-autoresearch
       - arxiv-agentic-rag
       - system-design-academy
-      - sdcourse-python-js
-      - sdcourse-java-spring
       - portfolio-enterprise-architecture-graph
 
   authenticated-manual:
