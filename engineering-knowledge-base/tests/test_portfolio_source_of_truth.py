@@ -9,6 +9,22 @@ REPO_ROOT = ROOT.parent
 
 
 class PortfolioSourceOfTruthTests(unittest.TestCase):
+    def test_machine_readable_contract_freezes_canonical_branch(self):
+        contract = yaml.safe_load(
+            (ROOT / "config" / "portfolio-knowledge-contract.yaml").read_text(encoding="utf-8")
+        ) or {}
+        self.assertEqual("canonical", contract["status"])
+        self.assertEqual(
+            "feature/portfolio-knowledge-source-of-truth",
+            contract["source_of_truth"]["branch"],
+        )
+        self.assertEqual(
+            "Yashu7372/enterprise-architecture-graph",
+            contract["promotion"]["to"],
+        )
+        self.assertFalse(contract["automation"]["raw_runtime_output_committed"])
+        self.assertFalse(contract["promotion"]["raw_article_body_allowed"])
+
     def test_canonical_context_and_runner_exist(self):
         context = REPO_ROOT / "PORTFOLIO_KNOWLEDGE_SYSTEM.md"
         runner = ROOT / "scripts" / "run_portfolio_knowledge_pipeline.py"
