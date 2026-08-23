@@ -118,3 +118,14 @@ sources:
       - hands-on-course
       - java
       - spring-boot
+
+  - name: portfolio-enterprise-architecture-graph
+    type: github
+    url: https://github.com/Yashu7372/enterprise-architecture-graph
+    tags:
+      - portfolio-curated
+      - enterprise-architecture
+      - knowledge-graph
+      - ai-engineering
+      - reference-architecture
+      - source-tier-a
