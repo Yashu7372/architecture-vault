@@ -1,0 +1,53 @@
+groups:
+  canonical-public:
+    description: Public, repeatable knowledge inputs used by the portfolio knowledge layer.
+    sources:
+      - openclaw
+      - karpathy-autoresearch
+      - dropbox-engineering
+      - grab-engineering
+      - airbnb-engineering
+      - arxiv-agentic-rag
+      - system-design-academy
+      - sdcourse-python-js
+      - sdcourse-java-spring
+      - portfolio-enterprise-architecture-graph
+
+  architecture-research:
+    description: Production architecture, system-design case studies, and reference implementations.
+    sources:
+      - dropbox-engineering
+      - grab-engineering
+      - airbnb-engineering
+      - system-design-academy
+      - portfolio-enterprise-architecture-graph
+
+  ai-engineering:
+    description: Agentic systems, AI engineering, autonomous research, and RAG sources.
+    sources:
+      - openclaw
+      - karpathy-autoresearch
+      - arxiv-agentic-rag
+      - portfolio-enterprise-architecture-graph
+
+  daily-learning:
+    description: Public-course curricula and safely accessible lesson material.
+    sources:
+      - sdcourse-python-js
+      - sdcourse-java-spring
+
+  scheduled-public:
+    description: Bounded public sources safe for unattended scheduled refreshes.
+    sources:
+      - openclaw
+      - karpathy-autoresearch
+      - arxiv-agentic-rag
+      - system-design-academy
+      - sdcourse-python-js
+      - sdcourse-java-spring
+      - portfolio-enterprise-architecture-graph
+
+  authenticated-manual:
+    description: Sources that require an explicit authenticated local/manual run and must not run in public scheduled automation.
+    sources:
+      - ai-agent-mastery-substack
