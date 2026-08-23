@@ -1,0 +1,80 @@
+from pathlib import Path
+import unittest
+
+import yaml
+
+
+ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parent
+
+
+class PortfolioSourceOfTruthTests(unittest.TestCase):
+    def test_canonical_context_and_runner_exist(self):
+        context = REPO_ROOT / "PORTFOLIO_KNOWLEDGE_SYSTEM.md"
+        runner = ROOT / "scripts" / "run_portfolio_knowledge_pipeline.py"
+        self.assertTrue(context.is_file())
+        self.assertTrue(runner.is_file())
+        self.assertIn(
+            "feature/portfolio-knowledge-source-of-truth",
+            context.read_text(encoding="utf-8"),
+        )
+
+    def test_all_supported_collector_types_have_implementations(self):
+        required = {
+            "catalog_collector.py",
+            "web_collector.py",
+            "substack_collector.py",
+            "github_collector.py",
+            "arxiv_collector.py",
+            "pdf_collector.py",
+            "youtube_collector.py",
+        }
+        actual = {path.name for path in (ROOT / "collectors").glob("*_collector.py")}
+        self.assertTrue(required <= actual, required - actual)
+
+    def test_source_groups_reference_known_sources(self):
+        manual = yaml.safe_load(
+            (ROOT / "config" / "sources.manual.yaml").read_text(encoding="utf-8")
+        ) or {}
+        generated = yaml.safe_load(
+            (ROOT / "config" / "sources.generated.yaml").read_text(encoding="utf-8")
+        ) or {}
+        groups = yaml.safe_load(
+            (ROOT / "config" / "source-groups.yaml").read_text(encoding="utf-8")
+        ) or {}
+
+        names = {
+            source["name"]
+            for source in manual.get("sources", []) + generated.get("sources", [])
+        }
+        self.assertIn("portfolio-enterprise-architecture-graph", names)
+
+        for group_name, group in groups.get("groups", {}).items():
+            with self.subTest(group=group_name):
+                sources = group.get("sources", [])
+                self.assertTrue(sources)
+                self.assertEqual(len(sources), len(set(sources)))
+                self.assertEqual([], sorted(set(sources) - names))
+
+    def test_scheduled_group_is_public_only(self):
+        data = yaml.safe_load(
+            (ROOT / "config" / "source-groups.yaml").read_text(encoding="utf-8")
+        ) or {}
+        scheduled = set(data["groups"]["scheduled-public"]["sources"])
+        self.assertNotIn("ai-agent-mastery-substack", scheduled)
+        self.assertIn("sdcourse-python-js", scheduled)
+        self.assertIn("sdcourse-java-spring", scheduled)
+
+    def test_canonical_group_connects_research_learning_and_portfolio(self):
+        data = yaml.safe_load(
+            (ROOT / "config" / "source-groups.yaml").read_text(encoding="utf-8")
+        ) or {}
+        canonical = set(data["groups"]["canonical-public"]["sources"])
+        self.assertIn("system-design-academy", canonical)
+        self.assertIn("arxiv-agentic-rag", canonical)
+        self.assertIn("sdcourse-python-js", canonical)
+        self.assertIn("portfolio-enterprise-architecture-graph", canonical)
+
+
+if __name__ == "__main__":
+    unittest.main()
