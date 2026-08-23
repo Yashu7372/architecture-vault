@@ -1,0 +1,96 @@
+version: 1
+status: canonical
+
+source_of_truth:
+  repository: Yashu7372/architecture-vault
+  branch: feature/portfolio-knowledge-source-of-truth
+  implementation_root: engineering-knowledge-base
+
+responsibilities:
+  architecture_vault:
+    owns:
+      - source-registry
+      - collectors
+      - normalized-ingestion
+      - deduplication
+      - indexes
+      - retrieval-context
+      - lightweight-source-graph
+      - bounded-context-packs
+      - learning-course-builders
+      - scheduled-public-refresh
+    does_not_own:
+      - final-curated-portfolio-graph
+      - flagship-implementation-workflow-state
+      - deterministic-implementation-verification
+      - public-content-authority
+
+  enterprise_architecture_graph:
+    repository: Yashu7372/enterprise-architecture-graph
+    owns:
+      - curated-concepts
+      - typed-relationships
+      - architecture-patterns
+      - failure-modes
+      - role-learning-paths
+      - portfolio-maturity
+      - reference-architecture-narrative
+
+  flagship_implementation:
+    primary_repository: Yashu7372/engineering-control-plane
+    owns:
+      - executable-implementation
+      - engineering-evidence
+      - tests
+      - verification
+      - runtime-observations
+      - implementation-adrs
+
+  publishing:
+    consumes:
+      - curated-original-knowledge
+      - safe-implementation-evidence
+      - original-diagrams
+      - tests-and-benchmarks
+      - reviewed-learning-notes
+    forbidden_as_authority:
+      - raw-third-party-captures
+      - unreviewed-generated-summaries
+
+source_registry:
+  manual: config/sources.manual.yaml
+  generated: config/sources.generated.yaml
+  groups: config/source-groups.yaml
+  canonical_public_group: canonical-public
+  scheduled_research_group: scheduled-public
+  scheduled_course_group: daily-learning
+  authenticated_group: authenticated-manual
+
+automation:
+  canonical_branch_workflow: .github/workflows/portfolio-knowledge-source-of-truth.yml
+  default_branch_scheduler: .github/workflows/portfolio-knowledge-scheduled-refresh.yml
+  schedule_cron_utc: "23 2 * * *"
+  scheduled_course_progression:
+    runner: scripts/run_daily_course_learning.py
+    track: all
+    lessons_per_run: 1
+    state: output/scheduler/sdcourse-state.json
+  raw_runtime_output_committed: false
+
+promotion:
+  from: architecture-vault
+  to: Yashu7372/enterprise-architecture-graph
+  requires_review: true
+  requires_original_summary: true
+  requires_provenance: true
+  requires_relationships: true
+  raw_article_body_allowed: false
+
+invariants:
+  - old-feature-branches-are-history-not-authority
+  - raw-third-party-content-is-not-public-portfolio-content
+  - curated-knowledge-is-distinct-from-retrieval-context
+  - implementation-evidence-is-distinct-from-external-research
+  - course-access-boundaries-remain-public-preview-or-curriculum-only
+  - scheduled-authenticated-scraping-is-disabled
+  - future-work-on-this-path-targets-the-canonical-branch
