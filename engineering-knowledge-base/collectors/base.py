@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Any, Optional
 
 
 @dataclass
@@ -13,6 +13,7 @@ class KnowledgeDocument:
     published_date: Optional[str] = None
     tags: list[str] = field(default_factory=list)
     links: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class BaseCollector:
