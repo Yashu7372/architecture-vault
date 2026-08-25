@@ -1,3 +1,7 @@
-from .document_gate import GateDecision, ProcessedDocument, process_document
+"""Deterministic Architecture Vault processing foundation.
 
-__all__ = ["GateDecision", "ProcessedDocument", "process_document"]
+The package deliberately keeps collection/evidence processing separate from final
+curated architectural authority. No LLM is used for chunk generation.
+"""
+
+__all__: list[str] = []
