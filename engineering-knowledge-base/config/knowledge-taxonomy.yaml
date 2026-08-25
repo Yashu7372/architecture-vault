@@ -1,0 +1,362 @@
+version: 1
+status: seed-controlled-vocabulary
+purpose: >
+  Stable engineering domains and seed concepts used for deterministic classification.
+  These are retrieval/learning candidates, not automatically curated architectural truth.
+
+depth_levels:
+  L0: intuition
+  L1: fundamentals
+  L2: implementation
+  L3: production
+  L4: architecture
+  L5: research-internals
+
+lenses:
+  - learn
+  - architect
+  - production
+  - code
+  - failures
+  - big-tech
+  - interview
+  - portfolio
+
+domains:
+  - {id: cs-foundations, name: Computer Science Foundations}
+  - {id: networking, name: Networking}
+  - {id: software-engineering, name: Software Engineering}
+  - {id: architecture-patterns, name: Architecture & Software Patterns}
+  - {id: distributed-systems, name: Distributed Systems}
+  - {id: data-systems, name: Data Systems}
+  - {id: performance, name: High Performance Systems}
+  - {id: reliability, name: Reliability & SRE}
+  - {id: security, name: Security}
+  - {id: devops-platform, name: DevOps & Platform Engineering}
+  - {id: probability-statistics, name: Probability & Statistics}
+  - {id: ai-ml, name: AI, ML & LLM Systems}
+
+concepts:
+  - id: concurrency
+    name: Concurrency
+    domain: cs-foundations
+    aliases: [concurrent programming, threads]
+    keywords: [synchronization, race condition, mutex, semaphore]
+  - id: memory-management
+    name: Memory Management
+    domain: cs-foundations
+    aliases: [memory allocation, garbage collection]
+    keywords: [heap, stack, gc, allocation]
+  - id: tcp
+    name: TCP
+    domain: networking
+    aliases: [transmission control protocol]
+    keywords: [connection, congestion, retransmission, socket]
+  - id: http
+    name: HTTP
+    domain: networking
+    aliases: [http/1.1, http/2, http/3]
+    keywords: [request, response, headers, keep-alive]
+  - id: dns
+    name: DNS
+    domain: networking
+    aliases: [domain name system]
+    keywords: [resolver, record, ttl]
+  - id: tls
+    name: TLS
+    domain: networking
+    aliases: [transport layer security, ssl]
+    keywords: [certificate, handshake, encryption]
+  - id: load-balancing
+    name: Load Balancing
+    domain: networking
+    aliases: [load balancer]
+    keywords: [round robin, least connections, health check]
+  - id: solid
+    name: SOLID Principles
+    domain: software-engineering
+    aliases: [solid]
+    keywords: [single responsibility, dependency inversion, interface segregation]
+  - id: dependency-injection
+    name: Dependency Injection
+    domain: software-engineering
+    aliases: [dependency injection, inversion of control, ioc]
+    keywords: [constructor injection, container]
+  - id: testing
+    name: Software Testing
+    domain: software-engineering
+    aliases: [unit testing, integration testing, contract testing]
+    keywords: [test, mock, assertion, fixture]
+  - id: hexagonal-architecture
+    name: Hexagonal Architecture
+    domain: architecture-patterns
+    aliases: [ports and adapters, hexagonal architecture]
+    keywords: [adapter, port, domain core]
+  - id: domain-driven-design
+    name: Domain-Driven Design
+    domain: architecture-patterns
+    aliases: [ddd, domain driven design]
+    keywords: [bounded context, aggregate, ubiquitous language]
+  - id: cqrs
+    name: CQRS
+    domain: architecture-patterns
+    aliases: [command query responsibility segregation]
+    keywords: [command model, query model, read model]
+  - id: event-sourcing
+    name: Event Sourcing
+    domain: architecture-patterns
+    aliases: [event sourcing]
+    keywords: [event store, replay, aggregate history]
+  - id: transactional-outbox
+    name: Transactional Outbox
+    domain: architecture-patterns
+    aliases: [outbox pattern, transactional outbox]
+    keywords: [outbox table, atomic publish, cdc]
+    prerequisites: [database-transactions]
+  - id: idempotency
+    name: Idempotency
+    domain: architecture-patterns
+    aliases: [idempotent consumer, idempotent operation]
+    keywords: [deduplication, duplicate event, processed event]
+  - id: saga
+    name: Saga Pattern
+    domain: architecture-patterns
+    aliases: [saga, saga pattern]
+    keywords: [compensation, distributed transaction, choreography, orchestration]
+  - id: circuit-breaker
+    name: Circuit Breaker
+    domain: architecture-patterns
+    aliases: [circuit breaker]
+    keywords: [open state, half open, downstream failure]
+  - id: retry-backoff
+    name: Retry, Backoff & Jitter
+    domain: architecture-patterns
+    aliases: [exponential backoff, retry with jitter]
+    keywords: [retry, backoff, jitter, retry storm]
+  - id: rate-limiting
+    name: Rate Limiting
+    domain: architecture-patterns
+    aliases: [rate limiter]
+    keywords: [token bucket, leaky bucket, quota]
+  - id: control-plane-data-plane
+    name: Control Plane / Data Plane
+    domain: architecture-patterns
+    aliases: [control plane, data plane]
+    keywords: [control-plane, data-plane, configuration plane]
+  - id: materialized-view
+    name: Materialized View & Projection
+    domain: architecture-patterns
+    aliases: [materialized view, projection, read projection]
+    keywords: [read model, denormalized view, projection worker]
+  - id: cap-theorem
+    name: CAP Theorem
+    domain: distributed-systems
+    aliases: [cap theorem, cap]
+    keywords: [consistency, availability, partition tolerance]
+  - id: eventual-consistency
+    name: Eventual Consistency
+    domain: distributed-systems
+    aliases: [eventual consistency]
+    keywords: [convergence, stale read, asynchronous replication]
+  - id: consensus
+    name: Distributed Consensus
+    domain: distributed-systems
+    aliases: [consensus]
+    keywords: [agreement, majority, quorum, leader election]
+  - id: raft
+    name: Raft
+    domain: distributed-systems
+    aliases: [raft consensus, raft]
+    keywords: [term, leader election, replicated log]
+    prerequisites: [consensus]
+  - id: consistent-hashing
+    name: Consistent Hashing
+    domain: distributed-systems
+    aliases: [consistent hashing]
+    keywords: [hash ring, virtual nodes, vnode]
+  - id: replication
+    name: Replication
+    domain: distributed-systems
+    aliases: [data replication, replicated]
+    keywords: [leader follower, replica, replication lag]
+  - id: sharding
+    name: Sharding & Partitioning
+    domain: distributed-systems
+    aliases: [sharding, partitioning]
+    keywords: [partition key, shard key, hot partition]
+  - id: quorum
+    name: Quorum
+    domain: distributed-systems
+    aliases: [quorum reads, quorum writes, quorum]
+    keywords: [majority, read quorum, write quorum]
+  - id: database-transactions
+    name: Database Transactions
+    domain: data-systems
+    aliases: [database transaction, transaction]
+    keywords: [commit, rollback, isolation, atomicity]
+  - id: acid
+    name: ACID
+    domain: data-systems
+    aliases: [acid properties, acid]
+    keywords: [atomicity, consistency, isolation, durability]
+  - id: database-indexing
+    name: Database Indexing
+    domain: data-systems
+    aliases: [database index, indexing]
+    keywords: [b-tree, query plan, index scan]
+  - id: caching
+    name: Caching
+    domain: data-systems
+    aliases: [cache-aside, read-through cache, write-through cache]
+    keywords: [cache hit, cache miss, ttl, eviction]
+  - id: event-streaming
+    name: Event Streaming
+    domain: data-systems
+    aliases: [event streaming, message streaming]
+    keywords: [kafka, broker, topic, partition, consumer]
+  - id: latency-percentiles
+    name: Latency Percentiles
+    domain: performance
+    aliases: [p95, p99, p99.9, tail latency]
+    keywords: [percentile latency, tail latency]
+  - id: queueing
+    name: Queueing Theory
+    domain: performance
+    aliases: [queueing theory, queuing theory]
+    keywords: [arrival rate, service rate, little's law, utilization]
+  - id: backpressure
+    name: Backpressure
+    domain: performance
+    aliases: [backpressure, flow control]
+    keywords: [bounded queue, slow consumer, demand]
+  - id: batching
+    name: Batching
+    domain: performance
+    aliases: [batch processing, batching]
+    keywords: [microbatch, batch size, amortize]
+  - id: sli-slo
+    name: SLI / SLO
+    domain: reliability
+    aliases: [service level indicator, service level objective, slo, sli]
+    keywords: [error budget, availability target]
+  - id: observability
+    name: Observability
+    domain: reliability
+    aliases: [observability]
+    keywords: [metrics, logs, traces, telemetry]
+  - id: incident-management
+    name: Incident Management
+    domain: reliability
+    aliases: [incident response, incident management]
+    keywords: [postmortem, on-call, mttr]
+  - id: chaos-engineering
+    name: Chaos Engineering
+    domain: reliability
+    aliases: [chaos engineering]
+    keywords: [fault injection, game day, resilience test]
+  - id: oauth2-oidc
+    name: OAuth 2.0 / OpenID Connect
+    domain: security
+    aliases: [oauth2, oauth 2.0, oidc, openid connect]
+    keywords: [authorization code, access token, identity provider]
+  - id: jwt
+    name: JWT
+    domain: security
+    aliases: [json web token, jwt]
+    keywords: [claims, signature, token]
+  - id: zero-trust
+    name: Zero Trust
+    domain: security
+    aliases: [zero trust]
+    keywords: [least privilege, verify explicitly, identity]
+  - id: threat-modeling
+    name: Threat Modeling
+    domain: security
+    aliases: [threat model, threat modeling]
+    keywords: [security review, mitigation, attack surface]
+  - id: ci-cd
+    name: CI/CD
+    domain: devops-platform
+    aliases: [continuous integration, continuous delivery, continuous deployment, ci/cd]
+    keywords: [pipeline, build, deployment]
+  - id: kubernetes
+    name: Kubernetes
+    domain: devops-platform
+    aliases: [kubernetes, k8s]
+    keywords: [pod, deployment, scheduler, controller]
+  - id: infrastructure-as-code
+    name: Infrastructure as Code
+    domain: devops-platform
+    aliases: [infrastructure as code, iac, terraform]
+    keywords: [terraform, declarative infrastructure]
+  - id: gitops
+    name: GitOps
+    domain: devops-platform
+    aliases: [gitops]
+    keywords: [reconciliation, desired state, argo cd, flux]
+  - id: conditional-probability
+    name: Conditional Probability
+    domain: probability-statistics
+    aliases: [conditional probability]
+    keywords: [bayes, probability given]
+  - id: probability-distributions
+    name: Probability Distributions
+    domain: probability-statistics
+    aliases: [probability distribution, normal distribution, poisson distribution, exponential distribution]
+    keywords: [variance, expectation, random variable]
+  - id: hypothesis-testing
+    name: Hypothesis Testing
+    domain: probability-statistics
+    aliases: [hypothesis testing, statistical significance]
+    keywords: [p-value, confidence interval, null hypothesis]
+  - id: embeddings
+    name: Embeddings
+    domain: ai-ml
+    aliases: [vector embeddings, embedding model, embeddings]
+    keywords: [vector similarity, cosine similarity, semantic search]
+  - id: transformers
+    name: Transformers
+    domain: ai-ml
+    aliases: [transformer architecture, transformers]
+    keywords: [attention, self-attention, positional encoding]
+  - id: llm
+    name: Large Language Models
+    domain: ai-ml
+    aliases: [large language model, llm, llms]
+    keywords: [tokens, inference, foundation model]
+  - id: rag
+    name: Retrieval-Augmented Generation
+    domain: ai-ml
+    aliases: [retrieval augmented generation, rag]
+    keywords: [retrieval, context, vector database, grounding]
+    prerequisites: [embeddings, llm]
+  - id: tool-calling
+    name: Tool Calling
+    domain: ai-ml
+    aliases: [tool calling, function calling]
+    keywords: [tool use, function call, capability]
+  - id: mcp
+    name: Model Context Protocol
+    domain: ai-ml
+    aliases: [model context protocol, mcp]
+    keywords: [mcp server, mcp client, tools, resources]
+  - id: ai-agents
+    name: AI Agents
+    domain: ai-ml
+    aliases: [ai agent, ai agents, agentic ai, agentic system]
+    keywords: [agent loop, planning, tools, memory]
+  - id: multi-agent-systems
+    name: Multi-Agent Systems
+    domain: ai-ml
+    aliases: [multi-agent system, multi agent system]
+    keywords: [agent orchestration, coordinator, specialist agents]
+  - id: llm-evaluation
+    name: LLM Evaluation
+    domain: ai-ml
+    aliases: [llm evaluation, ai evaluation, evals]
+    keywords: [judge, benchmark, groundedness, hallucination]
+  - id: mlops
+    name: MLOps
+    domain: ai-ml
+    aliases: [mlops, machine learning operations]
+    keywords: [model registry, experiment tracking, model serving, feature store]
