@@ -1,4 +1,4 @@
-version: 1
+version: 3
 status: canonical
 
 source_of_truth:
@@ -12,15 +12,31 @@ responsibilities:
       - source-registry
       - collectors
       - normalized-ingestion
+      - raw-and-canonical-evidence
+      - content-quality-gates
+      - structure-recovery
+      - media-indexing
+      - sentence-safe-chunking
       - deduplication
       - indexes
       - retrieval-context
       - lightweight-source-graph
+      - deterministic-semantic-candidates
+      - evidence-backed-concept-scoring
+      - extractive-gists
+      - inferred-relation-candidates
+      - source-authority-scoring
+      - duplicate-and-near-duplicate-control
+      - pdf-page-chapter-figure-provenance
+      - statistical-relation-scoring
+      - multi-lens-candidate-learning-units
       - bounded-context-packs
       - learning-course-builders
       - scheduled-public-refresh
     does_not_own:
       - final-curated-portfolio-graph
+      - final-curated-concept-definitions
+      - final-curated-typed-relationships
       - flagship-implementation-workflow-state
       - deterministic-implementation-verification
       - public-content-authority
@@ -29,7 +45,7 @@ responsibilities:
     repository: Yashu7372/enterprise-architecture-graph
     owns:
       - curated-concepts
-      - typed-relationships
+      - verified-typed-relationships
       - architecture-patterns
       - failure-modes
       - role-learning-paths
@@ -56,6 +72,34 @@ responsibilities:
     forbidden_as_authority:
       - raw-third-party-captures
       - unreviewed-generated-summaries
+      - inferred-relations-without-evidence
+
+knowledge_spine:
+  storage: output/context/context.sqlite
+  schema_version: 3
+  taxonomy: config/knowledge-taxonomy.yaml
+  evidence_policy: config/evidence-policy.yaml
+  learning_lenses: config/learning-lenses.yaml
+  relation_metrics: [jaccard, pmi, npmi, tfidf_support, source_quality, source_diversity]
+  duplicate_evidence_behavior: duplicate-cluster-counts-as-one-evidence-unit
+  evidence_states:
+    OBSERVED: explicitly present in deterministic source material
+    EXTRACTED: structured directly from explicit source wording
+    INFERRED: deterministic statistical or rule-based interpretation
+    VERIFIED: promoted only after deterministic evidence/review requirements are satisfied
+  semantic_authority: candidate-evidence-backed
+  learning_unit_default:
+    lenses: [learn, architect, production, failures, code, big-tech, interview, portfolio]
+    target_reading_minutes: 2-3
+    generation_mode: deterministic-extractive-no-llm
+  invariants:
+    - candidate-concepts-do-not-equal-curated-concepts
+    - inferred-relations-do-not-equal-verified-relations
+    - every-learning-unit-retains-source-evidence
+    - source-authority-does-not-change-evidence-state
+    - duplicate-copies-do-not-inflate-relation-confidence
+    - negative-pmi-does-not-create-semantic-relations
+    - raw-content-remains-distinct-from-canonical-content
 
 source_registry:
   manual: config/sources.manual.yaml
@@ -90,6 +134,7 @@ invariants:
   - old-feature-branches-are-history-not-authority
   - raw-third-party-content-is-not-public-portfolio-content
   - curated-knowledge-is-distinct-from-retrieval-context
+  - candidate-semantics-are-distinct-from-curated-knowledge
   - implementation-evidence-is-distinct-from-external-research
   - course-access-boundaries-remain-public-preview-or-curriculum-only
   - scheduled-authenticated-scraping-is-disabled
