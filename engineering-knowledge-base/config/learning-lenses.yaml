@@ -1,0 +1,82 @@
+version: 1
+status: deterministic-extractive-lenses
+purpose: >
+  Assemble 2-3 minute evidence-backed learning views without LLM rewriting.
+  Lenses are generated only when enough matching source evidence exists.
+
+lenses:
+  learn:
+    depth_level: L1
+    target_words: 360
+    min_evidence: 2
+    cue_terms: [definition, means, works, overview, concept, example, purpose, used to, allows, enables]
+    sections:
+      - {id: problem, title: Why it exists, cues: [problem, challenge, limitation, need, issue, pain]}
+      - {id: mental_model, title: Mental model, cues: [means, concept, model, idea, overview, definition]}
+      - {id: mechanics, title: How it works, cues: [works, flow, process, algorithm, step, request, event]}
+  architect:
+    depth_level: L4
+    target_words: 430
+    min_evidence: 2
+    cue_terms: [architecture, trade-off, tradeoff, choice, alternative, consistency, scalability, coupling, boundary, design]
+    sections:
+      - {id: forces, title: Design forces, cues: [constraint, requirement, force, scalability, consistency, latency]}
+      - {id: tradeoffs, title: Trade-offs, cues: [trade-off, tradeoff, cost, benefit, drawback, sacrifice]}
+      - {id: alternatives, title: Alternatives and boundaries, cues: [alternative, instead, versus, vs, choose, when to use]}
+  production:
+    depth_level: L3
+    target_words: 430
+    min_evidence: 2
+    cue_terms: [production, deploy, scale, throughput, latency, monitor, metric, operation, capacity, retry]
+    sections:
+      - {id: runtime, title: Runtime behavior, cues: [runtime, throughput, latency, load, traffic, concurrency]}
+      - {id: operations, title: Operations, cues: [deploy, monitor, metric, alert, capacity, autoscale, observability]}
+      - {id: resilience, title: Production resilience, cues: [retry, timeout, backoff, failover, recovery, redundancy]}
+  failures:
+    depth_level: L3
+    target_words: 360
+    min_evidence: 2
+    cue_terms: [failure, error, timeout, retry, outage, partition, unavailable, duplicate, stale, recovery]
+    sections:
+      - {id: failure_modes, title: Failure modes, cues: [failure, error, outage, partition, unavailable, duplicate, stale]}
+      - {id: detection, title: Detection, cues: [detect, metric, alert, health, monitor, trace, log]}
+      - {id: recovery, title: Recovery, cues: [recover, recovery, retry, backoff, failover, replay, repair]}
+  code:
+    depth_level: L2
+    target_words: 340
+    min_evidence: 1
+    cue_terms: [implementation, code, class, function, method, api, config, configuration, query, command]
+    preferred_block_types: [code]
+    sections:
+      - {id: implementation, title: Implementation shape, cues: [implementation, code, class, function, method, api]}
+      - {id: configuration, title: Configuration and contracts, cues: [config, configuration, schema, contract, property]}
+      - {id: testing, title: Testing considerations, cues: [test, assertion, mock, integration, contract test]}
+  big-tech:
+    depth_level: L4
+    target_words: 430
+    min_evidence: 1
+    cue_terms: [scale, architecture, production, system, service, infrastructure, million, billion, global]
+    require_authority_types: [company-engineering, company-research]
+    sections:
+      - {id: context, title: Why the system was built, cues: [problem, scale, requirement, challenge, needed]}
+      - {id: architecture, title: Architecture decision, cues: [architecture, design, component, service, storage, network]}
+      - {id: lessons, title: Production lesson, cues: [lesson, trade-off, failure, performance, reliability, scale]}
+  interview:
+    depth_level: L2
+    target_words: 300
+    min_evidence: 2
+    cue_terms: [why, when, compare, versus, trade-off, guarantee, consistency, failure, use]
+    sections:
+      - {id: core, title: Core explanation, cues: [definition, means, works, purpose, guarantee]}
+      - {id: compare, title: Comparison points, cues: [compare, versus, vs, alternative, difference]}
+      - {id: senior_points, title: Senior-level discussion points, cues: [trade-off, failure, scale, consistency, operation]}
+  portfolio:
+    depth_level: L4
+    target_words: 340
+    min_evidence: 1
+    require_authority_types: [first-party-project]
+    cue_terms: [architecture, implementation, decision, project, component, workflow, evidence]
+    sections:
+      - {id: application, title: Where it is applied, cues: [project, system, application, architecture, component]}
+      - {id: decisions, title: Engineering decisions, cues: [decision, trade-off, design, boundary, pattern]}
+      - {id: evidence, title: Implementation evidence, cues: [implementation, test, benchmark, evidence, runtime]}
