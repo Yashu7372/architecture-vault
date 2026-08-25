@@ -1,0 +1,67 @@
+version: 1
+status: deterministic-source-evidence-policy
+purpose: >
+  Score source authority independently from semantic relevance. Tiers affect retrieval
+  and learning-unit evidence weighting but never convert inferred knowledge into VERIFIED truth.
+
+tiers:
+  A:
+    score: 0.95
+    description: Primary/original evidence such as specifications, research papers, official engineering publications, and first-party source material.
+  B:
+    score: 0.78
+    description: Strong secondary or technical source with useful implementation depth.
+  C:
+    score: 0.58
+    description: Discovery/explanation source useful for learning but not preferred over primary evidence.
+  D:
+    score: 0.38
+    description: Low-authority or unknown source retained for discovery only.
+
+defaults_by_source_type:
+  arxiv: {tier: A, authority_type: research-paper}
+  pdf: {tier: B, authority_type: document}
+  github: {tier: B, authority_type: source-code-or-repository}
+  web: {tier: C, authority_type: web-article}
+  substack: {tier: C, authority_type: newsletter}
+  substack-daily-course: {tier: C, authority_type: course-material}
+  youtube: {tier: C, authority_type: video}
+
+host_rules:
+  - {pattern: '(^|\.)arxiv\.org$', tier: A, authority_type: research-paper}
+  - {pattern: '(^|\.)rfc-editor\.org$', tier: A, authority_type: specification}
+  - {pattern: '(^|\.)ietf\.org$', tier: A, authority_type: specification}
+  - {pattern: '(^|\.)openjdk\.org$', tier: A, authority_type: official-documentation}
+  - {pattern: '(^|\.)docs\.oracle\.com$', tier: A, authority_type: official-documentation}
+  - {pattern: '(^|\.)docs\.python\.org$', tier: A, authority_type: official-documentation}
+  - {pattern: '(^|\.)nodejs\.org$', tier: A, authority_type: official-documentation}
+  - {pattern: '(^|\.)kubernetes\.io$', tier: A, authority_type: official-documentation}
+  - {pattern: '(^|\.)spring\.io$', tier: A, authority_type: official-documentation}
+  - {pattern: '(^|\.)sre\.google$', tier: A, authority_type: company-engineering}
+  - {pattern: '(^|\.)research\.google$', tier: A, authority_type: company-research}
+  - {pattern: '(^|\.)engineering\.fb\.com$', tier: A, authority_type: company-engineering}
+  - {pattern: '(^|\.)netflixtechblog\.com$', tier: A, authority_type: company-engineering}
+  - {pattern: '(^|\.)engineering\.linkedin\.com$', tier: A, authority_type: company-engineering}
+  - {pattern: '(^|\.)dropbox\.tech$', tier: A, authority_type: company-engineering}
+  - {pattern: '(^|\.)engineering\.grab\.com$', tier: A, authority_type: company-engineering}
+  - {pattern: '(^|\.)aws\.amazon\.com$', path_pattern: '/builders-library/', tier: A, authority_type: company-engineering}
+
+source_name_rules:
+  - {pattern: '^portfolio-', tier: A, authority_type: first-party-project}
+  - {pattern: '^(yashu-|karpathy-autoresearch$|openclaw$)', tier: B, authority_type: source-code-or-repository}
+
+metadata_overrides:
+  tier_keys: [evidence_tier, source_tier]
+  authority_keys: [authority_type, source_category]
+
+promoted_metadata:
+  catalog_section: [catalog_section, section, category]
+  company: [company, organization, org]
+  system: [system, product, architecture_system]
+  paper_id: [paper_id, arxiv_id, doi]
+  repository: [repository, repo, github_repo]
+  language: [language, programming_language]
+  license: [license, license_name]
+  course: [course, course_name, track]
+  page_count: [pdf_page_count, page_count, pages]
+  collection_mode: [collection_mode]
