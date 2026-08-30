@@ -6,7 +6,7 @@ import requests
 from slugify import slugify
 
 from collectors.base import BaseCollector, KnowledgeDocument
-from collectors.web_collector import DEFAULT_HEADERS, WebCollector
+from drivers.web_reader import DEFAULT_HEADERS, WebDocumentReader
 
 
 HEADING_RE = re.compile(r"^(#{2,6})\s+(.+?)\s*$")
@@ -24,12 +24,18 @@ class CatalogEntry:
 
 
 class CatalogCollector(BaseCollector):
-    """Collect article links from a Markdown catalog and extract every unique target page."""
+    """Collect article links from a Markdown catalog and extract every unique target page.
+
+    The capability depends on the shared HTTP/HTML resource driver rather than
+    importing another collector capability implementation.
+    """
 
     def __init__(self, session: requests.Session | None = None):
         self.session = session or requests.Session()
         self.session.headers.update(DEFAULT_HEADERS)
-        self.web_collector = WebCollector(self.session)
+        # Keep the historical attribute name for tests/custom injection, but the
+        # object is a resource driver rather than the WebCollector capability.
+        self.web_collector = WebDocumentReader(self.session)
         self.last_report: dict = {}
 
     def collect(self, source: dict) -> list[KnowledgeDocument]:
