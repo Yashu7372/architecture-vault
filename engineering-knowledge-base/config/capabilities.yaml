@@ -1,0 +1,125 @@
+version: 1
+contract: architecture-vault-collector-capability-v1
+
+# These manifests are portable declarations. The Architecture Vault runner can
+# execute them locally today; the Enterprise OS Control Plane can discover the
+# same ids later and decide where/when they are allowed to run.
+capabilities:
+  - id: vault.collect.web
+    version: 1.0.0
+    kind: collector
+    description: Read a public web page and return normalized architecture evidence.
+    entrypoint: collectors.web_collector:WebCollector
+    source_types: [web]
+    deterministic: true
+    network_access: true
+    auth_mode: none
+    trust_boundary: UNTRUSTED_EXTERNAL
+    timeout_seconds: 90
+    output_contract: KnowledgeDocument[]
+    side_effects:
+      external_writes: false
+      local_writes: false
+    tags: [acquisition, web, read-only]
+
+  - id: vault.collect.catalog
+    version: 1.0.0
+    kind: collector
+    description: Discover catalog links and collect reachable articles through bounded web extraction.
+    entrypoint: collectors.catalog_collector:CatalogCollector
+    source_types: [catalog]
+    deterministic: true
+    network_access: true
+    auth_mode: none
+    trust_boundary: UNTRUSTED_EXTERNAL
+    timeout_seconds: 900
+    output_contract: KnowledgeDocument[]
+    side_effects:
+      external_writes: false
+      local_writes: false
+    tags: [acquisition, catalog, fan-out, read-only]
+
+  - id: vault.collect.substack
+    version: 1.0.0
+    kind: collector
+    description: Read public or explicitly operator-authenticated Substack material within configured access boundaries.
+    entrypoint: collectors.substack_collector:SubstackCollector
+    source_types: [substack]
+    deterministic: true
+    network_access: true
+    auth_mode: optional-user-session
+    trust_boundary: UNTRUSTED_EXTERNAL
+    timeout_seconds: 900
+    output_contract: KnowledgeDocument[]
+    side_effects:
+      external_writes: false
+      local_writes: false
+    tags: [acquisition, substack, access-boundary, read-only]
+
+  - id: vault.collect.github
+    version: 1.0.0
+    kind: collector
+    description: Read repository metadata, README and selected architecture Markdown files.
+    entrypoint: collectors.github_collector:GitHubCollector
+    source_types: [github]
+    deterministic: true
+    network_access: true
+    auth_mode: none
+    trust_boundary: UNTRUSTED_EXTERNAL
+    timeout_seconds: 180
+    output_contract: KnowledgeDocument[]
+    side_effects:
+      external_writes: false
+      local_writes: false
+    tags: [acquisition, github, repository, read-only]
+
+  - id: vault.collect.arxiv
+    version: 1.0.0
+    kind: collector
+    description: Query arXiv and return paper metadata/abstract evidence.
+    entrypoint: collectors.arxiv_collector:ArxivCollector
+    source_types: [arxiv]
+    deterministic: true
+    network_access: true
+    auth_mode: none
+    trust_boundary: UNTRUSTED_EXTERNAL
+    timeout_seconds: 120
+    output_contract: KnowledgeDocument[]
+    side_effects:
+      external_writes: false
+      local_writes: false
+    tags: [acquisition, research, arxiv, read-only]
+
+  - id: vault.collect.pdf
+    version: 1.0.0
+    kind: collector
+    description: Extract text from an operator-provided local PDF while preserving source provenance.
+    entrypoint: collectors.pdf_collector:PdfCollector
+    source_types: [pdf]
+    deterministic: true
+    network_access: false
+    auth_mode: none
+    trust_boundary: UNTRUSTED_EXTERNAL
+    timeout_seconds: 300
+    output_contract: KnowledgeDocument[]
+    side_effects:
+      external_writes: false
+      local_writes: false
+    tags: [acquisition, pdf, local-resource, read-only]
+
+  - id: vault.collect.youtube
+    version: 1.0.0
+    kind: collector
+    description: Read YouTube metadata/transcript evidence subject to configured public access behavior.
+    entrypoint: collectors.youtube_collector:YouTubeCollector
+    source_types: [youtube]
+    deterministic: true
+    network_access: true
+    auth_mode: none
+    trust_boundary: UNTRUSTED_EXTERNAL
+    timeout_seconds: 300
+    output_contract: KnowledgeDocument[]
+    side_effects:
+      external_writes: false
+      local_writes: false
+    tags: [acquisition, youtube, transcript, read-only]
