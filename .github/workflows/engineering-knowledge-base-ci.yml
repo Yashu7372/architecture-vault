@@ -35,6 +35,12 @@ jobs:
       - name: Compile Python sources
         run: python -m compileall -q engineering-knowledge-base
 
+      - name: Validate collector capability contracts
+        run: python engineering-knowledge-base/scripts/validate_capabilities.py --json
+
+      - name: Validate canonical pipeline registry
+        run: python engineering-knowledge-base/scripts/run_portfolio_knowledge_pipeline.py --validate-only
+
       - name: Run unit tests
         shell: bash
         run: |
