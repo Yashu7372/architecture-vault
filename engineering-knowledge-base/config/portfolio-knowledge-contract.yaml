@@ -1,4 +1,4 @@
-version: 3
+version: 4
 status: canonical
 
 source_of_truth:
@@ -10,6 +10,10 @@ responsibilities:
   architecture_vault:
     owns:
       - source-registry
+      - collector-capability-manifests
+      - bounded-collector-execution
+      - collector-execution-evidence
+      - untrusted-source-boundary
       - collectors
       - normalized-ingestion
       - raw-and-canonical-evidence
@@ -33,7 +37,12 @@ responsibilities:
       - bounded-context-packs
       - learning-course-builders
       - scheduled-public-refresh
+      - incremental-source-state
+      - candidate-knowledge-deltas
     does_not_own:
+      - enterprise-control-plane-kernel
+      - cross-project-scheduling-authority
+      - cross-project-mutation-authority
       - final-curated-portfolio-graph
       - final-curated-concept-definitions
       - final-curated-typed-relationships
@@ -74,6 +83,35 @@ responsibilities:
       - unreviewed-generated-summaries
       - inferred-relations-without-evidence
 
+capability_model:
+  registry: config/capabilities.yaml
+  contract_version: 1
+  ownership: enterprise-os-capability-plane-compatible
+  collector_kind: collector
+  execution_model: selected-by-source-registry-not-agent-chosen
+  collector_authority:
+    external_writes: forbidden
+    promotion: forbidden
+    canonical_knowledge_mutation: forbidden
+  trust_boundary:
+    default: UNTRUSTED_EXTERNAL
+    content_role: data-not-instructions
+    sanitization_is_security_boundary: false
+    architectural_controls_are_security_boundary: true
+  control_plane_relationship:
+    architecture_vault_can_run_locally: true
+    control_plane_future_responsibility:
+      - authorize
+      - schedule
+      - select-execution-provider
+      - enforce-resource-policy
+      - observe
+      - retain-cross-project-run-state
+    architecture_vault_remains:
+      - project-pipeline
+      - capability-implementation-host
+      - evidence-acquisition-and-processing-system
+
 knowledge_spine:
   storage: output/context/context.sqlite
   schema_version: 3
@@ -100,6 +138,23 @@ knowledge_spine:
     - duplicate-copies-do-not-inflate-relation-confidence
     - negative-pmi-does-not-create-semantic-relations
     - raw-content-remains-distinct-from-canonical-content
+    - collector-output-remains-untrusted-evidence
+
+incremental_refresh:
+  source_state: output/state/source-state.json
+  latest_delta: output/deltas/latest.json
+  run_delta_pattern: output/deltas/{run_id}.json
+  execution_evidence_pattern: output/evidence/{run_id}/
+  delta_authority: CANDIDATE_ONLY
+  automatic_promotion: false
+  change_types: [ADDED, CONTENT_CHANGED, METADATA_CHANGED, REMOVED]
+  failure_behavior:
+    preserve_last_good_source_snapshot: true
+    failed-source-does-not-create-removals: true
+    partial-source-merges-with-last-good-snapshot: true
+  downstream_intent:
+    - targeted-knowledge-spine-re-evaluation
+    - avoid-full-rediscovery-when-only-bounded-evidence-changed
 
 source_registry:
   manual: config/sources.manual.yaml
@@ -138,4 +193,7 @@ invariants:
   - implementation-evidence-is-distinct-from-external-research
   - course-access-boundaries-remain-public-preview-or-curriculum-only
   - scheduled-authenticated-scraping-is-disabled
+  - collector-capabilities-never-own-external-write-authority
+  - collector-content-is-data-never-control-instruction
+  - failed-refresh-never-erases-last-good-evidence
   - future-work-on-this-path-targets-the-canonical-branch
