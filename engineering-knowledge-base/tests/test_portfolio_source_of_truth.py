@@ -14,6 +14,7 @@ class PortfolioSourceOfTruthTests(unittest.TestCase):
             (ROOT / "config" / "portfolio-knowledge-contract.yaml").read_text(encoding="utf-8")
         ) or {}
         self.assertEqual("canonical", contract["status"])
+        self.assertGreaterEqual(contract["version"], 4)
         self.assertEqual(
             "feature/portfolio-knowledge-source-of-truth",
             contract["source_of_truth"]["branch"],
@@ -24,12 +25,19 @@ class PortfolioSourceOfTruthTests(unittest.TestCase):
         )
         self.assertFalse(contract["automation"]["raw_runtime_output_committed"])
         self.assertFalse(contract["promotion"]["raw_article_body_allowed"])
+        self.assertEqual("config/capabilities.yaml", contract["capability_model"]["registry"])
+        self.assertTrue(contract["incremental_refresh"]["failure_behavior"]["preserve_last_good_source_snapshot"])
+        self.assertFalse(contract["incremental_refresh"]["automatic_promotion"])
 
     def test_canonical_context_and_runner_exist(self):
         context = REPO_ROOT / "PORTFOLIO_KNOWLEDGE_SYSTEM.md"
         runner = ROOT / "scripts" / "run_portfolio_knowledge_pipeline.py"
+        capability_registry = ROOT / "config" / "capabilities.yaml"
+        validator = ROOT / "scripts" / "validate_capabilities.py"
         self.assertTrue(context.is_file())
         self.assertTrue(runner.is_file())
+        self.assertTrue(capability_registry.is_file())
+        self.assertTrue(validator.is_file())
         self.assertIn(
             "feature/portfolio-knowledge-source-of-truth",
             context.read_text(encoding="utf-8"),
@@ -47,6 +55,25 @@ class PortfolioSourceOfTruthTests(unittest.TestCase):
         }
         actual = {path.name for path in (ROOT / "collectors").glob("*_collector.py")}
         self.assertTrue(required <= actual, required - actual)
+
+    def test_every_supported_collector_type_is_a_declared_capability(self):
+        data = yaml.safe_load(
+            (ROOT / "config" / "capabilities.yaml").read_text(encoding="utf-8")
+        ) or {}
+        capabilities = data.get("capabilities", [])
+        declared = {
+            source_type
+            for capability in capabilities
+            for source_type in capability.get("source_types", [])
+        }
+        self.assertEqual(
+            {"catalog", "web", "substack", "github", "arxiv", "pdf", "youtube"},
+            declared,
+        )
+        for capability in capabilities:
+            with self.subTest(capability=capability.get("id")):
+                self.assertEqual("collector", capability.get("kind"))
+                self.assertFalse(capability.get("side_effects", {}).get("external_writes", True))
 
     def test_source_groups_reference_known_sources(self):
         manual = yaml.safe_load(
