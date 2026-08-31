@@ -91,6 +91,11 @@ def parse_args():
     )
     parser.add_argument("--skip-index", action="store_true", help="Do not rebuild Markdown indexes.")
     parser.add_argument("--skip-context", action="store_true", help="Do not rebuild retrieval chunks/SQLite context.")
+    parser.add_argument(
+        "--skip-portfolio-export",
+        action="store_true",
+        help="Do not build the evidence-backed candidate export consumed by portfolio curation.",
+    )
     parser.add_argument("--list-groups", action="store_true", help="Print configured groups and exit.")
     parser.add_argument(
         "--validate-only",
@@ -100,7 +105,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def expected_outputs(skip_index: bool, skip_context: bool) -> list[Path]:
+def expected_outputs(skip_index: bool, skip_context: bool, skip_portfolio_export: bool) -> list[Path]:
     paths = [OUTPUT_DIR / "manifest.json"]
     if not skip_index:
         paths.append(OUTPUT_DIR / "MASTER_INDEX.md")
@@ -113,6 +118,8 @@ def expected_outputs(skip_index: bool, skip_context: bool) -> list[Path]:
                 OUTPUT_DIR / "context" / "CONTEXT_INDEX.md",
             ]
         )
+    if not skip_portfolio_export:
+        paths.append(OUTPUT_DIR / "exports" / "portfolio-candidates.v1.json")
     return paths
 
 
@@ -146,6 +153,9 @@ def main() -> int:
     if unknown:
         raise ValueError(f"Unknown source(s): {', '.join(unknown)}")
 
+    if args.skip_context and not args.skip_portfolio_export:
+        raise ValueError("portfolio candidate export requires context chunks; use --skip-portfolio-export with --skip-context")
+
     print(
         json.dumps(
             {
@@ -156,6 +166,7 @@ def main() -> int:
                 "validate_catalog": args.validate_catalog,
                 "skip_index": args.skip_index,
                 "skip_context": args.skip_context,
+                "skip_portfolio_export": args.skip_portfolio_export,
             },
             indent=2,
         )
@@ -193,7 +204,14 @@ def main() -> int:
     if not args.skip_context:
         run([python, str(ROOT / "scripts" / "build_context.py")])
 
-    missing = [str(path.relative_to(ROOT)) for path in expected_outputs(args.skip_index, args.skip_context) if not path.is_file()]
+    if not args.skip_portfolio_export:
+        run([python, str(ROOT / "scripts" / "export_portfolio_candidates.py")])
+
+    missing = [
+        str(path.relative_to(ROOT))
+        for path in expected_outputs(args.skip_index, args.skip_context, args.skip_portfolio_export)
+        if not path.is_file()
+    ]
     if missing:
         raise RuntimeError("Pipeline completed but required output is missing:\n- " + "\n- ".join(missing))
 
@@ -203,17 +221,22 @@ def main() -> int:
         name = item.get("source_name", "unknown")
         source_counts[name] = source_counts.get(name, 0) + 1
 
-    print(
-        json.dumps(
-            {
-                "status": "PASS",
-                "documents": len(manifest),
-                "source_counts": dict(sorted(source_counts.items())),
-                "output": str(OUTPUT_DIR),
-            },
-            indent=2,
+    result = {
+        "status": "PASS",
+        "documents": len(manifest),
+        "source_counts": dict(sorted(source_counts.items())),
+        "output": str(OUTPUT_DIR),
+    }
+    if not args.skip_portfolio_export:
+        candidate_export = json.loads(
+            (OUTPUT_DIR / "exports" / "portfolio-candidates.v1.json").read_text(encoding="utf-8")
         )
-    )
+        result["portfolio_candidates"] = {
+            "concepts": len(candidate_export.get("concepts", [])),
+            "relationships": len(candidate_export.get("relationships", [])),
+        }
+
+    print(json.dumps(result, indent=2))
     return 0
 
 
