@@ -1,0 +1,183 @@
+{
+  "schema_version": "portfolio-spine.v1",
+  "generated_at": "2026-09-11T00:00:00Z",
+  "snapshot": "checked-in-demo",
+  "authorities": {
+    "discovery": "Yashu7372/architecture-vault",
+    "curated_knowledge": "Yashu7372/enterprise-architecture-graph",
+    "implementation_evidence": "flagship repositories"
+  },
+  "nodes": [
+    {"id":"context-engineering","name":"Context Engineering","type":"capability","domain":"ai-engineering","maturity":"LEARNING"},
+    {"id":"durable-dag","name":"Durable DAG Execution","type":"architecture","domain":"ai-engineering","maturity":"UNDERSTOOD"},
+    {"id":"repository-relationship-graph","name":"Repository Relationship Graph","type":"architecture","domain":"ai-engineering","maturity":"LEARNING"},
+    {"id":"deterministic-verification","name":"Deterministic Verification","type":"capability","domain":"ai-engineering","maturity":"UNDERSTOOD"},
+    {"id":"evidence-model","name":"Engineering Evidence Model","type":"capability","domain":"ai-engineering","maturity":"LEARNING"},
+    {"id":"transactional-outbox","name":"Transactional Outbox","type":"pattern","domain":"event-driven-architecture","maturity":"UNDERSTOOD"},
+    {"id":"dual-write-problem","name":"Dual Write Problem","type":"failure_mode","domain":"distributed-systems","maturity":"UNDERSTOOD"},
+    {"id":"duplicate-delivery","name":"Duplicate Delivery","type":"failure_mode","domain":"distributed-systems","maturity":"UNDERSTOOD"},
+    {"id":"idempotency","name":"Idempotency","type":"concept","domain":"distributed-systems","maturity":"UNDERSTOOD"},
+    {"id":"idempotent-consumer","name":"Idempotent Consumer","type":"pattern","domain":"distributed-systems","maturity":"UNDERSTOOD"},
+    {"id":"operational-projection","name":"Operational Projection","type":"pattern","domain":"event-driven-architecture","maturity":"UNDERSTOOD"},
+    {"id":"entity-timeline","name":"Entity Timeline","type":"architecture","domain":"event-driven-architecture","maturity":"UNDERSTOOD"},
+    {"id":"projection-change","name":"Projection Change Event","type":"pattern","domain":"event-driven-architecture","maturity":"UNDERSTOOD"},
+    {"id":"impact-resolver","name":"Impact Resolver","type":"capability","domain":"architecture-foundations","maturity":"UNDERSTOOD"},
+    {"id":"forge","name":"Forge AI Engineering Control Plane","type":"project","domain":"ai-engineering","maturity":"LEARNING"},
+    {"id":"chronicle","name":"Chronicle Operational Intelligence Platform","type":"project","domain":"event-driven-architecture","maturity":"LEARNING"}
+  ],
+  "relationships": [
+    {"from":"context-engineering","relation":"USED_BY","to":"forge"},
+    {"from":"durable-dag","relation":"USED_BY","to":"forge"},
+    {"from":"repository-relationship-graph","relation":"USED_BY","to":"forge"},
+    {"from":"deterministic-verification","relation":"PRODUCES","to":"evidence-model"},
+    {"from":"deterministic-verification","relation":"USED_BY","to":"forge"},
+    {"from":"evidence-model","relation":"USED_BY","to":"forge"},
+    {"from":"transactional-outbox","relation":"SOLVES","to":"dual-write-problem"},
+    {"from":"transactional-outbox","relation":"MAY_CAUSE","to":"duplicate-delivery","note":"At-least-once publication can redeliver after a crash around publish acknowledgement."},
+    {"from":"transactional-outbox","relation":"COMPLEMENTS","to":"idempotent-consumer"},
+    {"from":"idempotency","relation":"MITIGATES","to":"duplicate-delivery"},
+    {"from":"entity-timeline","relation":"FEEDS","to":"operational-projection"},
+    {"from":"operational-projection","relation":"PRODUCES","to":"projection-change"},
+    {"from":"projection-change","relation":"FEEDS","to":"impact-resolver"},
+    {"from":"chronicle","relation":"BUILDS_ON","to":"transactional-outbox"},
+    {"from":"chronicle","relation":"BUILDS_ON","to":"entity-timeline"},
+    {"from":"chronicle","relation":"BUILDS_ON","to":"operational-projection"},
+    {"from":"chronicle","relation":"BUILDS_ON","to":"impact-resolver"}
+  ],
+  "items": [
+    {
+      "node_id":"context-engineering",
+      "slug":"context-engineering",
+      "kind":"article",
+      "title":"Context Engineering",
+      "domain":"ai-engineering",
+      "maturity":"LEARNING",
+      "summary":"Build the smallest trustworthy task context an AI needs instead of exposing an entire enterprise codebase.",
+      "two_minute_read": {
+        "problem":"Enterprise repositories are too large, noisy, and security-sensitive to pass wholesale into every AI request. More tokens do not automatically mean better reasoning; they can hide the evidence that actually matters.",
+        "mental_model":"Treat context as a compiled engineering artifact. Start from task requirements, changed files, relationships, contracts, architecture constraints, and prior evidence. Select the smallest bounded set that can support the next reasoning step.",
+        "how_it_works":"Repository intelligence and impact analysis identify the relevant working set. A context builder turns that into an immutable pack with provenance and explicit omissions. The model can request more evidence, but broad rediscovery is the exception rather than the default.",
+        "tradeoffs":"Too little context can hide an important dependency. Too much context increases cost and noise. The design therefore needs progressive disclosure, provenance, confidence, and a way for the runtime to fetch additional evidence when a hypothesis requires it.",
+        "takeaway":"Context engineering is not prompt stuffing. It is deterministic selection of bounded evidence for a specific engineering decision."
+      },
+      "relationships":[{"from":"context-engineering","relation":"USED_BY","to":"forge"}],
+      "evidence":[{"label":"Forge control plane","detail":"Flagship implementation track","url":"https://github.com/Yashu7372/engineering-control-plane"}],
+      "provenance":[{"label":"Curated knowledge node","path":"knowledge/ai-engineering/context-engineering.md","url":"https://github.com/Yashu7372/enterprise-architecture-graph/blob/main/knowledge/ai-engineering/context-engineering.md"}]
+    },
+    {
+      "node_id":"durable-dag",
+      "slug":"durable-dag-execution",
+      "kind":"article",
+      "title":"Durable DAG Execution",
+      "domain":"ai-engineering",
+      "maturity":"UNDERSTOOD",
+      "summary":"Long-running engineering work needs persisted task state and recovery semantics, not one fragile model session.",
+      "two_minute_read": {
+        "problem":"A multi-step engineering task can outlive a terminal process, a model session, or a worker. If progress only exists in memory, a crash can erase completed work or cause unsafe repetition.",
+        "mental_model":"Represent work as dependency-linked tasks. Persist the state of each task. Any READY task can be leased to a worker, retried, cancelled, resumed, or recovered without forgetting what already succeeded.",
+        "how_it_works":"The runtime owns dependencies, READY/RUNNING/BLOCKED and terminal states, retries, worker leases, heartbeats, approvals, cancellation, failure propagation, and evidence. Models reason inside tasks; they do not own durable process control.",
+        "tradeoffs":"Durability adds storage, scheduling, lease, idempotency, and recovery complexity. It is unnecessary for tiny one-shot jobs, but becomes essential when workflows span tools, agents, repositories, approvals, or long execution windows.",
+        "takeaway":"The workflow DAG answers what work can run now. Keep it separate from the software knowledge graph, which answers what is connected."
+      },
+      "relationships":[{"from":"durable-dag","relation":"USED_BY","to":"forge"}],
+      "evidence":[{"label":"Forge control plane","detail":"Durable orchestration target","url":"https://github.com/Yashu7372/engineering-control-plane"}],
+      "provenance":[{"label":"Curated knowledge node","path":"knowledge/ai-engineering/durable-dag.md","url":"https://github.com/Yashu7372/enterprise-architecture-graph/blob/main/knowledge/ai-engineering/durable-dag.md"}]
+    },
+    {
+      "node_id":"transactional-outbox",
+      "slug":"transactional-outbox",
+      "kind":"article",
+      "title":"Transactional Outbox",
+      "domain":"event-driven-architecture",
+      "maturity":"UNDERSTOOD",
+      "summary":"Persist the business change and the intent to publish in one transaction, then publish asynchronously.",
+      "two_minute_read": {
+        "problem":"A service often needs to update its database and publish an event. Those are two independent systems, so a crash between the writes can leave business state and messaging state inconsistent.",
+        "mental_model":"Write the business change and an outbox record in the same local database transaction. A separate publisher reads pending outbox records and sends them to the broker.",
+        "how_it_works":"The local database transaction gives atomicity between business state and the intent to publish. Publication is decoupled and retryable. The broker and consumer side still operate with their own delivery semantics.",
+        "tradeoffs":"The outbox does not magically provide exactly-once delivery. A publisher can crash after sending but before marking a row sent, creating duplicate delivery. Backlogs, poison records, ordering, retention, and monitoring must be designed explicitly.",
+        "takeaway":"Transactional Outbox solves the dual-write window, but it works best together with idempotent consumers and strong operational visibility."
+      },
+      "relationships":[
+        {"from":"transactional-outbox","relation":"SOLVES","to":"dual-write-problem"},
+        {"from":"transactional-outbox","relation":"MAY_CAUSE","to":"duplicate-delivery"},
+        {"from":"transactional-outbox","relation":"COMPLEMENTS","to":"idempotent-consumer"},
+        {"from":"chronicle","relation":"BUILDS_ON","to":"transactional-outbox"}
+      ],
+      "evidence":[],
+      "provenance":[{"label":"Curated knowledge node","path":"knowledge/event-driven-architecture/transactional-outbox.md","url":"https://github.com/Yashu7372/enterprise-architecture-graph/blob/main/knowledge/event-driven-architecture/transactional-outbox.md"}]
+    },
+    {
+      "node_id":"operational-projection",
+      "slug":"operational-projection",
+      "kind":"article",
+      "title":"Operational Projection",
+      "domain":"event-driven-architecture",
+      "maturity":"UNDERSTOOD",
+      "summary":"Maintain query-optimized current operational state derived from accepted events.",
+      "two_minute_read": {
+        "problem":"Operational UIs and rules need fast current-state answers. Rejoining source tables or rebuilding history on every request creates duplicated work, inconsistent interpretations, and slower reads.",
+        "mental_model":"Treat the event history as evidence and the projection as the current read-optimized view. Projection workers consume accepted changes and update only the state needed for operational queries.",
+        "how_it_works":"An entity timeline captures how state evolved. Projection workers derive current state. A projection-change event records what fields changed, allowing an impact resolver to selectively trigger downstream aggregates, rules, views, or notification hints.",
+        "tradeoffs":"Projections are derived state, so they can become stale or corrupted. Versioning, replay, duplicate safety, ordering rules, rebuild procedures, lag metrics, and source-of-truth boundaries are first-class requirements.",
+        "takeaway":"Use projections to make current operational reads cheap, but preserve replayable evidence so derived state can always be rebuilt and verified."
+      },
+      "relationships":[
+        {"from":"entity-timeline","relation":"FEEDS","to":"operational-projection"},
+        {"from":"operational-projection","relation":"PRODUCES","to":"projection-change"},
+        {"from":"chronicle","relation":"BUILDS_ON","to":"operational-projection"}
+      ],
+      "evidence":[],
+      "provenance":[{"label":"Curated graph node","path":"graph/nodes.yaml","url":"https://github.com/Yashu7372/enterprise-architecture-graph/blob/main/graph/nodes.yaml"}]
+    },
+    {
+      "node_id":"forge",
+      "slug":"forge-ai-engineering-control-plane",
+      "kind":"lab",
+      "title":"Forge — AI Engineering Control Plane",
+      "domain":"ai-engineering",
+      "maturity":"LEARNING",
+      "summary":"A governed engineering system where AI reasons, durable orchestration coordinates, deterministic workers execute, and verification produces evidence.",
+      "two_minute_read": {
+        "problem":"AI coding assistants are useful as local terminal loops, but enterprise engineering needs scope control, durable task state, security, approvals, repeatability, independent verification, and audit evidence.",
+        "mental_model":"AI reasons. The control plane coordinates. Bounded workers perform mechanics. Independent verifiers check outcomes. An evidence plane records what actually happened.",
+        "how_it_works":"An engineering request passes governance and policy, becomes a durable workflow, resolves repository relationships and impact, compiles a bounded context, invokes AI reasoning where useful, executes deterministic capabilities, and verifies the result before recording evidence.",
+        "tradeoffs":"The platform deliberately avoids giving the model ownership of locks, retries, task persistence, or the authority to declare success. That adds orchestration infrastructure, but it makes long-running AI-assisted engineering governable and recoverable.",
+        "takeaway":"Forge treats the LLM as one reasoning engine inside an engineering operating system—not as the operating system itself."
+      },
+      "relationships":[
+        {"from":"context-engineering","relation":"USED_BY","to":"forge"},
+        {"from":"durable-dag","relation":"USED_BY","to":"forge"},
+        {"from":"repository-relationship-graph","relation":"USED_BY","to":"forge"},
+        {"from":"deterministic-verification","relation":"USED_BY","to":"forge"},
+        {"from":"evidence-model","relation":"USED_BY","to":"forge"}
+      ],
+      "evidence":[{"label":"Engineering Control Plane repository","detail":"Executable portfolio implementation","url":"https://github.com/Yashu7372/engineering-control-plane"}],
+      "provenance":[{"label":"Reference architecture","path":"architectures/forge-ai-engineering-control-plane.md","url":"https://github.com/Yashu7372/enterprise-architecture-graph/blob/main/architectures/forge-ai-engineering-control-plane.md"}]
+    },
+    {
+      "node_id":"chronicle",
+      "slug":"chronicle-operational-intelligence",
+      "kind":"lab",
+      "title":"Chronicle — Operational Intelligence",
+      "domain":"event-driven-architecture",
+      "maturity":"LEARNING",
+      "summary":"A generic real-time operational intelligence architecture built around event history, timelines, projections, change detection, and deterministic impact resolution.",
+      "two_minute_read": {
+        "problem":"When every downstream feature independently joins operational tables, polls for changes, or reconstructs the same state, systems accumulate duplicate processing, database load, inconsistent interpretations, and slow UI refresh cycles.",
+        "mental_model":"Accept domain-owned events, preserve a durable event history, reconstruct entity timelines, materialize current operational projections, determine exactly what changed, and run only the downstream work affected by that change.",
+        "how_it_works":"Domain services publish through an outbox into a canonical event envelope and journal. Timelines preserve temporal evolution. Projection workers maintain current state. Projection-change events feed an impact resolver, which selectively activates aggregates, rules, view workers, and lightweight real-time UI hints.",
+        "tradeoffs":"Derived projections must handle duplicates, out-of-order and late events, poison messages, hot entities, replay, version drift, broker outages, and store failures. The design therefore makes replay, recovery, observability, and measured NFRs part of the architecture.",
+        "takeaway":"Chronicle demonstrates how event history and current-state projections can coexist: history explains what happened; projections make operational reads fast."
+      },
+      "relationships":[
+        {"from":"chronicle","relation":"BUILDS_ON","to":"transactional-outbox"},
+        {"from":"chronicle","relation":"BUILDS_ON","to":"entity-timeline"},
+        {"from":"chronicle","relation":"BUILDS_ON","to":"operational-projection"},
+        {"from":"chronicle","relation":"BUILDS_ON","to":"impact-resolver"}
+      ],
+      "evidence":[],
+      "provenance":[{"label":"Reference architecture","path":"architectures/chronicle-operational-intelligence.md","url":"https://github.com/Yashu7372/enterprise-architecture-graph/blob/main/architectures/chronicle-operational-intelligence.md"}]
+    }
+  ]
+}

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Knowledge Spine</title>
+  <meta name="description" content="Two-minute architecture reads connected to portfolio labs, evidence, and curated knowledge." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="#" aria-label="Knowledge Spine home">
+        <span class="brand-mark">KS</span>
+        <span>
+          <strong>Knowledge Spine</strong>
+          <small>Architecture · AI Engineering · Labs</small>
+        </span>
+      </a>
+      <nav class="top-nav" aria-label="Primary">
+        <button class="nav-link is-active" data-filter="all">All</button>
+        <button class="nav-link" data-filter="article">Articles</button>
+        <button class="nav-link" data-filter="lab">Labs</button>
+      </nav>
+      <button class="lens-toggle" id="lensToggle" type="button" aria-pressed="true">
+        <span class="lens-dot"></span>
+        Knowledge Lens
+      </button>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">PORTFOLIO KNOWLEDGE SPINE</p>
+          <h1>Read an idea in two minutes.<br />See the engineering behind it.</h1>
+          <p class="hero-subtitle">
+            Short architecture explanations connected to patterns, failure modes, flagship labs,
+            implementation evidence, and the source of truth that backs each claim.
+          </p>
+          <div class="hero-actions">
+            <label class="search-box" for="searchInput">
+              <span aria-hidden="true">⌕</span>
+              <input id="searchInput" type="search" placeholder="Search context, outbox, DAG, projections…" autocomplete="off" />
+            </label>
+            <div class="stat-pill"><strong id="itemCount">0</strong><span>knowledge units</span></div>
+          </div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="orbit orbit-one"></div>
+          <div class="orbit orbit-two"></div>
+          <div class="core-node">KNOW</div>
+          <span class="satellite s1">PLAN</span>
+          <span class="satellite s2">ACT</span>
+          <span class="satellite s3">VERIFY</span>
+          <span class="satellite s4">LEARN</span>
+        </div>
+      </section>
+
+      <section class="content-layout">
+        <div class="feed-column">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">CURATED READS</p>
+              <h2 id="feedTitle">Architecture knowledge</h2>
+            </div>
+            <div class="domain-filter" id="domainFilter" aria-label="Domain filters"></div>
+          </div>
+          <div class="card-grid" id="cardGrid" aria-live="polite"></div>
+          <div class="empty-state" id="emptyState" hidden>
+            <strong>No matching knowledge unit.</strong>
+            <span>Try another term or reset the filters.</span>
+          </div>
+        </div>
+
+        <aside class="spine-panel" id="spinePanel">
+          <div class="panel-sticky">
+            <p class="eyebrow">THE SPINE</p>
+            <h3>Knowledge is more useful when it is connected.</h3>
+            <p>
+              Each read is anchored to a curated graph node. The lens exposes what it solves,
+              what it depends on, which lab demonstrates it, and where the evidence lives.
+            </p>
+            <div class="mini-flow">
+              <span>Concept</span><b>→</b><span>Relationship</span><b>→</b><span>Lab</span><b>→</b><span>Evidence</span>
+            </div>
+            <div class="authority-card">
+              <span class="authority-icon">✓</span>
+              <div>
+                <strong>Canonical truth stays outside the UI</strong>
+                <small>This surface is a derived read model, never an independent authority.</small>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <div class="reader-backdrop" id="readerBackdrop" hidden></div>
+  <section class="reader" id="reader" aria-modal="true" role="dialog" aria-labelledby="readerTitle" hidden>
+    <div class="reader-toolbar">
+      <div class="reader-meta" id="readerMeta"></div>
+      <button class="icon-button" id="closeReader" type="button" aria-label="Close reader">×</button>
+    </div>
+    <div class="reader-layout">
+      <article class="reader-content">
+        <div class="reader-kicker" id="readerKicker"></div>
+        <h2 id="readerTitle"></h2>
+        <p class="reader-summary" id="readerSummary"></p>
+        <div id="readerBody"></div>
+      </article>
+      <aside class="knowledge-lens" id="knowledgeLens">
+        <div class="lens-header">
+          <div>
+            <p class="eyebrow">KNOWLEDGE LENS</p>
+            <h3>Why this matters</h3>
+          </div>
+          <span class="lens-status">ON</span>
+        </div>
+        <div id="lensBody"></div>
+      </aside>
+    </div>
+  </section>
+
+  <template id="cardTemplate">
+    <article class="knowledge-card" tabindex="0">
+      <div class="card-topline">
+        <span class="kind-badge"></span>
+        <span class="read-badge">2 MIN</span>
+      </div>
+      <div class="card-body">
+        <span class="domain-label"></span>
+        <h3></h3>
+        <p class="card-summary"></p>
+      </div>
+      <div class="card-footer">
+        <div class="maturity"></div>
+        <button class="read-link" type="button">Open lens <span>↗</span></button>
+      </div>
+    </article>
+  </template>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
