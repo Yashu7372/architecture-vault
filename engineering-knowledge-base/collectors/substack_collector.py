@@ -1,5 +1,6 @@
 from urllib.parse import urljoin, urlparse
 import re
+
 from bs4 import BeautifulSoup
 from markdownify import markdownify as md
 from playwright.sync_api import sync_playwright
@@ -8,11 +9,25 @@ from collectors.base import BaseCollector, KnowledgeDocument
 
 
 class SubstackCollector(BaseCollector):
+    def __init__(self):
+        self.last_report: dict = {}
+
     def collect(self, source: dict) -> list[KnowledgeDocument]:
+        if source.get("course_mode"):
+            from collectors.strict_public_daily_course_collector import (
+                StrictPublicDailyCourseCollector,
+            )
+
+            collector = StrictPublicDailyCourseCollector()
+            documents = collector.collect(source)
+            self.last_report = collector.last_report
+            return documents
+
         docs: list[KnowledgeDocument] = []
         state_file = source.get("storage_state_file")
+        headless = bool(source.get("headless", False))
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=False)
+            browser = p.chromium.launch(headless=headless)
             context = browser.new_context(storage_state=state_file) if state_file else browser.new_context()
             page = context.new_page()
             for url in self._discover_posts(page, source["url"]):
@@ -65,7 +80,16 @@ class SubstackCollector(BaseCollector):
                 return None
             content = md(str(article_el), heading_style="ATX").strip()
             links = [urljoin(url, a["href"]) for a in article_el.find_all("a", href=True)]
-            return KnowledgeDocument(title, url, source["name"], "substack", content, None, published_date, source.get("tags", []), links)
+            return KnowledgeDocument(
+                title=title,
+                url=url,
+                source_name=source["name"],
+                source_type="substack",
+                content=content,
+                published_date=published_date,
+                tags=source.get("tags", []),
+                links=links,
+            )
         except Exception as exc:
             print(f"Failed Substack post {url}: {exc}")
             return None

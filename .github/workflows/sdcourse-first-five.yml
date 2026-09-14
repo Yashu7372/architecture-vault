@@ -1,0 +1,110 @@
+name: SDCourse First Five Lessons
+
+on:
+  push:
+    branches:
+      - feature/sdcourse-daily-learning-builder
+    paths:
+      - "engineering-knowledge-base/**"
+      - ".github/workflows/sdcourse-first-five.yml"
+  pull_request:
+    branches:
+      - feature/system-design-academy-context-layer
+    paths:
+      - "engineering-knowledge-base/**"
+      - ".github/workflows/sdcourse-first-five.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-first-five:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: engineering-knowledge-base/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r engineering-knowledge-base/requirements.txt
+
+      - name: Scrape and complete first five lessons
+        shell: bash
+        run: |
+          rm -rf engineering-knowledge-base/output
+          mkdir -p engineering-knowledge-base/output/diagnostics
+          python - <<'PY'
+          from pathlib import Path
+          import requests
+          url = "https://r.jina.ai/https://sdcourse.substack.com/p/hands-on-distributed-systems-with"
+          response = requests.get(url, timeout=90, headers={"Accept": "text/plain"})
+          response.raise_for_status()
+          Path("engineering-knowledge-base/output/diagnostics/curriculum-reader.md").write_text(
+              response.text,
+              encoding="utf-8",
+          )
+          PY
+          set -o pipefail
+          python engineering-knowledge-base/scripts/run_daily_course_learning.py \
+            --track python-js \
+            --lessons-per-run 5 \
+            2>&1 | tee engineering-knowledge-base/output/diagnostics/first-five-run.log
+
+      - name: List generated outputs
+        run: |
+          echo "Generated files:"
+          find engineering-knowledge-base/output -maxdepth 5 -type f | sort || true
+          echo "Scheduler state:"
+          cat engineering-knowledge-base/output/scheduler/sdcourse-state.json || true
+          echo "Collection report:"
+          cat engineering-knowledge-base/output/reports/sdcourse-python-js-collection.json || true
+          echo "Run diagnostics:"
+          cat engineering-knowledge-base/output/diagnostics/first-five-run.log || true
+
+      - name: Upload first-five learning artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdcourse-first-five-lessons
+          path: engineering-knowledge-base/output
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Verify curriculum and public boundaries
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path("engineering-knowledge-base/output")
+          report = json.loads((root / "reports/sdcourse-python-js-collection.json").read_text())
+          assert report["discovered"] == 254
+          assert report["attempted"] == 5
+          assert report["collected"] == 5
+          assert report["failed"] == 0
+          assert len(report["curriculum"]) == 254
+
+          first = report["curriculum"][0]
+          assert first["day"] == 1
+          assert first["module"].startswith("Module 1:")
+          assert first["week"].startswith("Week 1:")
+
+          levels = [item["access_level"] for item in report["results"]]
+          assert levels == ["public", "public", "public", "preview", "preview"], levels
+
+          assert (root / "courses/sdcourse-python-js/CURRICULUM_CONTEXT.md").is_file()
+          assert (root / "courses/sdcourse-python-js/CURRICULUM_CONTEXT.json").is_file()
+          for day in range(1, 6):
+              folder = root / f"daily-learning/sdcourse-python-js/day-{day:03d}"
+              assert (folder / "01-public-source.md").is_file()
+              assert (folder / "02-completed-lesson.md").is_file()
+              assert (folder / "STATUS.json").is_file()
+          PY
