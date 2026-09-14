@@ -15,7 +15,8 @@ class SubstackCollector(BaseCollector):
             browser = p.chromium.launch(headless=False)
             context = browser.new_context(storage_state=state_file) if state_file else browser.new_context()
             page = context.new_page()
-            for url in self._discover_posts(page, source["url"]):
+            urls = [source["url"]] if source.get("mode") == "exact" else self._discover_posts(page, source["url"])
+            for url in urls:
                 doc = self._extract_post(page, url, source)
                 if doc and len(doc.content) > 500:
                     docs.append(doc)
