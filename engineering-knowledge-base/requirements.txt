@@ -9,4 +9,4 @@ pypdf
 playwright
 feedparser
 youtube-transcript-api
-python-pptx\n
+python-pptx
